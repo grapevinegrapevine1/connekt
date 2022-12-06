@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+
+<html lang="ja" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+	<head>
+		
+		<!-- meta -->
+		<head th:replace="common_replace :: meta"></head>
+		
+		<!-- javascript -->
+		<script type="text/javascript" th:src="'..' + @{/javascript/library/dist/jsQR.js}"></script>
+		<script type="text/javascript" th:src="'..' + @{/javascript/store_read.js}"></script>
+		
+		<!-- css -->
+		<link rel="stylesheet" type="text/css" media="all" th:href="'..' + @{/css/store_read.css}" />
+		
+		<!-- title -->
+		<title>来客手続</title>
+		
+	</head>
+	<body>
+		
+		<div id="header">
+			<form method="get" th:action="@{/store_top}">
+				<button type="submit" class="arrow_left" ></button>
+			</form>
+			<span>来客手続</span>
+			
+			<!-- ログアウト -->
+			<button th:replace="common_replace :: logout"></button>
+		</div>
+		
+		<!-- メッセージ -->
+		<ul th:replace="common_replace :: info_messages"></ul>
+		<!-- エラーメッセージ -->
+		<ul th:replace="common_replace :: error_messages"></ul>
+		
+		<div class="head_title">
+			QRで手続き
+			<div class="head_sub">(アプリを持っている顧客向け)</div>
+		</div>
+		
+		<button class="btn" type="button" onClick="initQrReader();">顧客のQRコード読取</button>
+		
+		<!-- QRリーダー -->
+		<div th:replace="common_replace :: qr_reader_area"></div>
+		
+		<div class="head_title">
+			IDで手続き
+			<div class="head_sub">(アプリを持っている顧客向け)</div>
+		</div>
+		
+		<form method="post" id="store_req_fm" th:action="@{/store_request}">
+		
+			<span class="inpt">
+				顧客のID
+				<input type="number" name="user_id" id="qr_read_val" required placeholder="顧客のIDを入力してください"/>
+			</span>
+			
+			<button class="btn" type="submit">手続き</button>
+		</form>
+		
+		<div class="head_title">
+			顧客情報で手続き
+			<div class="head_sub">(アプリを持っていない顧客向け)</div>
+		</div>
+		
+		<form method="post" th:action="@{/store_request_user}" th:object="${store_readForm}">
+			
+			<label class="inpt">
+				顧客の氏名(保険証や免許証と同じ氏名をご入力下さい)
+				<span class="sub_label">苗字</span>
+				<input type="text" placeholder="苗字" class="inptTrim" onchange="trimInpt(this);" th:field="*{first_name}" required/>
+				
+				<span class="sub_label">名前</span>
+				<input type="text" placeholder="名前" class="inptTrim" onchange="trimInpt(this);" th:field="*{last_name}" required/>
+			</label>
+			
+			<label class="inpt">
+				顧客の電話番号(ハイフン不要)
+				<input type="tel"onchange="removeBar(this);" class="inptTrim" placeholder="ハイフン無しの電話番号を入力してください" th:field="*{tel}" required/>
+			</label>
+			
+			<label class="inpt">
+				生年月日
+				<input type="date" th:field="*{birth_str}" required/>
+			</label>
+			
+			<input type="hidden" th:field="*{is_plan_count}"/>
+			
+			<button class="btn" type="submit" onclick="cngIsPlanCnt(true)">手続き</button>
+			
+			<button class="btn" id="updateNonAppUserBtn" type="submit" onclick="cngIsPlanCnt(false)">プラン変更</button>
+		</form>
+	</body>
+</html>

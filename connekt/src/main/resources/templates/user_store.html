@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+
+<html lang="ja" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+	<head>
+		
+		<!-- meta -->
+		<head th:replace="common_replace :: meta"></head>
+		
+		<!-- javascript -->
+		<script type="text/javascript" th:src="'..' + @{/javascript/user_store.js}"></script>
+		
+		<!-- css -->
+		<link rel="stylesheet" type="text/css" media="all" th:href="'..' + @{/css/user_store.css}" />
+		
+		<!-- title -->
+		<title>店舗</title>
+		
+	</head>
+	<body>
+		<div id="header">
+			<form method="get" th:action="${from_store} ? @{/store_read} : @{/user_list}">
+				<button type="submit" class="arrow_left" ></button>
+			</form>
+			<span>店舗情報</span>
+			
+			<!-- ログアウト -->
+			<button th:replace="common_replace :: logout"></button>
+			
+			<!-- お気に入り
+			<form method="post" class="right_form" th:action="@{favorite_store}" th:object="${store}">
+				<input type="hidden" th:field="*{id}" required/>
+				<button type="submit">お気に入り</button>
+			</form> -->
+		</div>
+		
+		<div id="guide_msg" th:if="${from_store}">契約の登録/変更を行います。</div>
+		
+		<span class="head_2 bold" th:text="${store.name}"></span>
+		<span class="head_2" th:text="'(店舗ID:' + ${store.id} + ')'"></span>
+		
+		<!-- メッセージ -->
+		<ul th:replace="common_replace :: info_messages"></ul>
+		<!-- エラーメッセージ -->
+		<ul th:replace="common_replace :: error_messages"></ul>
+		
+		<div id="contract_text_area">
+			<button type="button" class="btn_3 planHead" onclick="$('#contract_text').toggle();">契約中のプラン詳細▼</button>
+			<textarea id="contract_text" th:text="${contract_text}"></textarea>
+		</div>
+		
+		<form method="post" th:action="@{/checkout_user_plan}">
+			
+			<input type="hidden" th:field="*{user_storeForm.store_id}"/>
+			<input type="hidden" th:field="*{user_storeForm.user_id}"/>
+			<input type="hidden" id="from_store" name="from_store" th:value="${from_store}"/>
+						
+			<div class="head_title">
+				プラン
+				<div class="head_sub">(「停止」は次回のプラン更新を停止します)</div>
+			</div>
+			
+			<div class="list_area">
+				<div class="plan_div">
+					<label>
+						<input type="radio" value="0" name="user_plan.plan_id" checked/>
+						なし
+					</label>
+				</div>
+				<div class="plan_div" th:each="plan: ${plans}">
+				
+					<!-- ラベル -->
+					<label class="plan_summary">
+						<input type="radio" class="inptPlan" th:value="${plan.id}" th:field="*{user_storeForm.user_plan.plan_id}"/>
+						<span th:text="${plan.name}"></span>
+						<br/>
+						<span class="priceText" th:text="'(￥' + ${plan.price} + ' -'"></span>
+						<span th:text="${plan.plan_interval} + 'ヵ月間で' + ${plan.count} + '回まで利用可能)'"></span>
+					</label>
+					
+					<!-- 決済エラー文言 -->
+					<span th:if="${user_storeForm.user_plan.error_user_pay}" class="err_usr_pay" th:text="'決済失敗により利用できません。上記「契約中のプラン詳細」をご確認下さい。'"></span>
+					<!-- 停止中プラン注意文言 -->
+					<span th:if="${user_storeForm.user_plan.error_user_pay eq false and plan.is_delete == 1}" class="is_delete" th:text="'このプランは店舗から削除されたため次回更新は停止されます。プランは終了日('+${user_storeForm.user_plan.period_end_str}+')まで利用できます。'"></span>
+					
+					<!-- 詳細ボタン -->
+					<span>
+						<button type="button" class="descBtn btn_3" th:onclick="'setDescText(this, true,' + ${plan.id} + ');toggleDescription();'">詳細</button>
+						<input type="hidden" class="desc_title" th:value="${plan.name} + '(￥' + ${plan.price} + '-' + ${plan.plan_interval} + 'ヵ月間で' + ${plan.count} + '回まで利用可能)'" />
+						<textarea class="desc" th:text="${plan.description}"></textarea>
+						<input type="hidden" class="stop_id" th:value="${plan.id}" />
+						<input type="hidden" class="is_refund" th:value="${user_storeForm.user_plan.is_refund}" />
+					</span>
+					
+					<!-- 停止/再開ボタン -->
+					<button th:if="${plan.id == user_storeForm.user_plan.plan_id and plan.is_delete == 0}"
+							th:with="isPlanStop = ${user_storeForm.user_plan.stripe_cancel_at_period_end}"
+							class="stopBtn btn_3" type="button" 
+							th:onclick="${isPlanStop} ? 'submitStopBtn('+ ${plan.id} +',true,false)' : 'submitStopBtn('+ ${plan.id} +',true,true)'"
+							th:text="${isPlanStop} ? '再開' : '停止' "></button>
+				</div>
+			</div>
+			
+			<div class="head_title head_margin">
+				オプション
+				<div class="head_sub">(「停止」は次回のプラン更新を停止します)</div>
+			</div>
+			
+			<div class="list_area">
+				
+				<div class="plan_div" th:each="option: ${options}" th:with="user_option = *{user_storeForm.getUserOption(option.id)}">
+					
+					<!-- ラベル -->
+					<label class="plan_summary">
+						<input type="checkbox" class="inptPlan" th:value="${option.id}" th:field="*{user_storeForm.user_options}" />
+						<span th:text="${option.name}"></span>
+						<br/>
+						<span class="priceText" th:text="'(￥' + ${option.price} + ' -'"></span>
+						<span th:text="${option.plan_interval} + 'ヵ月間で' + ${option.count} + '回まで利用可能)'"></span>
+					</label>
+					
+					<!-- 決済エラー文言 -->
+					<span th:if="${user_option != null and user_option.error_user_pay}" class="err_usr_pay" th:text="'決済失敗により利用できません。上記「契約中のプラン詳細」をご確認下さい。'"></span>
+					<!-- 停止中オプション注意文言 -->
+					<span th:if="(${user_option != null and user_option.error_user_pay eq false}) and ${option.is_delete == 1}" class="is_delete" th:text="'このプランは店舗から削除されたため次回更新は停止されます。プランは終了日('+${user_option.period_end_str}+')まで利用できます。'"></span>
+					
+					
+					<!-- 詳細ボタン -->
+					<span>
+						<button type="button" class="descBtn btn_3" th:onclick="'setDescText(this, false,' + ${option.id} + ');toggleDescription();'">詳細</button>
+						<input type="hidden" class="desc_title" th:value="${option.name} + '(￥' + ${option.price} + ')'" />
+						<textarea class="desc" th:text="${option.description}"></textarea>
+						<input type="hidden" class="is_refund" th:value="${user_option != null} ? ${user_option.is_refund} : false" />
+					</span>
+					
+					<!-- 停止/再開ボタン -->
+					<button th:if="${#lists.contains(user_storeForm.user_options,option.id) and option.is_delete == 0}"
+							th:with="isOptionStop = ${#lists.contains(user_option_stops,option.id)}"
+							class="stopBtn btn_3" type="button"
+							th:onclick="${isOptionStop} ? 'submitStopBtn('+ ${option.id} +',false,false)' : 'submitStopBtn('+ ${option.id} +',false,true)'"
+							th:text="${isOptionStop} ? '再開' : '停止' "></button>
+				</div>
+			</div>
+			
+			<button type="submit" class="btn" id="save_btn">保存</button>
+			
+			<p class="warning_text">
+				※プランを変更する際に、解除されたプランは利用停止されますが利用期間が残っている場合も返金は行われません。「契約中のプラン詳細」をご確認の上、プランを解除する時期にはご注意ください。
+			</p>
+			<p class="warning_text">
+				※返品について、契約開始から2日以内であるかつ未利用のプランであれば、「詳細」ボタンから返品することができます。返品すると決済手数料3.6%を除いた金額が返金されます。
+			</p>
+		</form>
+		
+		<!-- 停止ボタン用フォーム -->
+		<form class="form_stop" id="form_stop_plan" method="post" th:action="@{/stop_user_relation}" onSubmit="return confirmStop();">
+			<!-- 可変値 -->
+			<input type="hidden" id="relation_id" name="relation_id"/>
+			<input type="hidden" id="is_plan" name="is_plan"/>
+			<input type="hidden" id="is_stop" name="is_stop"/>
+			<!-- 固定値 -->
+			<input type="hidden" id="from_store" name="from_store" th:value="${from_store}"/>
+			<input type="hidden" name="store_id" th:value="${user_storeForm.store_id}"/>
+			<input type="hidden" th:field="*{user_storeForm.user_id}"/>
+			<!-- ボタン -->
+			<button class="stopSubmitBtns" type="submit"></button>
+		</form>
+		
+		<!-- モーダル -->
+		<div id="modal_desc_area" class="modal_area">
+			
+			<!-- プラン説明 -->
+			<div id="modal_desc_title" class="modal_title"></div>
+			<textarea id="modal_desc"class="modal_text" readonly></textarea>
+			
+			<!-- 選択ボタン -->
+			<button class="close_btn" id="modal_desc_select_btn" onclick="selectModalPlan();toggleDescription()">選択する</button>
+			
+			<!-- 返品ボタン -->
+			<form id="refund_form" method="post" th:action="@{/refund_user_relation}" onSubmit="return confirmRefund();">
+				<!-- 可変値 -->
+				<input type="hidden" name="relation_id"/>
+				<input type="hidden" name="is_plan"/>
+				<!-- 固定値 -->
+				<input type="hidden" name="from_store" th:value="${from_store}"/>
+				<input type="hidden" name="store_id" th:value="${user_storeForm.store_id}"/>
+				<input type="hidden" th:field="*{user_storeForm.user_id}"/>
+				<!-- ボタン -->
+				<button type="submit" class="close_btn" id="refund_btn">返品</button>
+			</form>
+			
+			<!-- 閉じるボタン -->
+			<button class="close_btn" onclick="toggleDescription()">閉じる</button>
+		</div>
+	</body>
+</html>

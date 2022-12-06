@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+
+<html lang="ja" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+	<head>
+		
+		<!-- meta -->
+		<head th:replace="common_replace :: meta"></head>
+		
+		<!-- title -->
+		<title>ネットワーク接続エラー</title>
+		
+	</head>
+	<body>
+		
+		<div id="header">
+			<form method="get" th:action="@{/user_top}">
+				<button type="submit" class="arrow_left" ></button>
+			</form>
+			<span>ネットワークに接続することができませんでした</span>
+		</div>
+		
+		<p>ネットワーク接続状況をご確認いただき再度操作を試みて下さい。</p>
+	</body>
+</html>

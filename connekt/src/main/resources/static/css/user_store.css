@@ -1,0 +1,90 @@
+@charset "UTF-8";
+
+.head_margin {
+	margin-top: 35px;
+}
+
+.plan_summary {
+	width: calc(100% - 80px);
+	display: inline-block;
+}
+
+.priceText {
+	margin-left: 20px;
+}
+
+#save_btn {
+	margin-top: 35px;
+}
+
+.desc {
+	display: none;
+}
+
+.descBtn, .stopBtn {
+	display: inline;
+	font-size: 19px;
+	padding: 0px 0px;
+	width: 70px;
+	position: absolute;
+	right: 7px;
+}
+
+.descBtn {
+	top: -7px;
+}
+
+.stopBtn {
+	top: 33px;
+}
+
+#contract_text_area {
+	margin-bottom: 25px;
+}
+
+.btn_3.planHead {
+	width: 100%;
+	padding: 5px 4px;
+	border-bottom-left-radius: 0;
+	border-bottom-right-radius: 0;
+	cursor: pointer;
+}
+
+#contract_text {
+	width: 100%;
+	height: 155px;
+	font-size: 18px;
+	border: 1px solid rgb(179, 179, 179);
+	border-radius: 0px 0px 5px 5px;
+	padding: 10px 0px;
+	overflow: hidden scroll;
+	word-break: break-all;
+	resize: none;
+	background: rgb(247, 247, 247);
+	box-sizing: border-box;
+	display: inline-block;
+}
+
+#from_store {
+	display: none;
+}
+
+.form_stop {
+	display: none;
+}
+
+#guide_msg {
+	font-size: 20px;
+	color: #4c75a7;
+	text-align: center;
+}
+
+.is_delete,.err_usr_pay {
+	position: absolute;
+	top: -20px;
+	left: 0px;
+	color: red;
+	font-size: 13px;
+	width: calc(100% - 79px);
+	line-height: 13px;
+}

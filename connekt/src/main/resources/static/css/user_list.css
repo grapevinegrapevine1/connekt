@@ -1,0 +1,16 @@
+@charset "UTF-8";
+
+.plan_div form {
+	width: calc(100% - 125px);
+}
+
+.plan_store_name {
+	border: none;
+	background: none;
+	padding: 0;
+	font-size: 20px;
+	cursor: pointer;
+	text-align: left;
+	text-decoration: underline;
+	color: rebeccapurple;
+}

@@ -1,0 +1,8 @@
+@charset "UTF-8";
+
+/* 設定画面アクセス認証チェックボックス */
+input[name="is_cert"]{
+	width: 25px;
+	height: 25px;
+	margin-left: 16px;
+}

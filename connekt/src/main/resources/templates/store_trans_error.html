@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+
+<html lang="ja" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+	<head>
+		
+		<!-- meta -->
+		<head th:replace="common_replace :: meta"></head>
+		<!-- css -->
+		<link rel="stylesheet" type="text/css" media="all" th:href="'..' + @{/css/common_trans_error.css}" />
+		
+		<!-- title -->
+		<title>再表示できない画面</title>
+		
+	</head>
+	<body>
+		
+		<div id="header">
+			<form method="get" th:action="@{/store_top}">
+				<button type="submit" class="arrow_left" ></button>
+			</form>
+			<span>再表示できない画面</span>
+			
+			<!-- ログアウト -->
+			<button th:replace="common_replace :: logout"></button>
+		</div>
+		<p>トップ画面から再度アクセスして下さい</p>
+		
+		<!-- メッセージ -->
+		<ul th:replace="common_replace :: info_messages"></ul>
+		<!-- エラーメッセージ -->
+		<ul th:replace="common_replace :: error_messages"></ul>
+	</body>
+</html>

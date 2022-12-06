@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+
+<html lang="ja" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+	<head>
+		
+		<!-- meta -->
+		<head th:replace="common_replace :: meta"></head>
+		
+		<!-- javascript -->
+		<script type="text/javascript" th:src="'..' + @{/javascript/library/jquery.qrcode.min.js}"></script>
+		<script type="text/javascript" th:src="'..' + @{/javascript/user_pay_error.js}"></script>
+		
+		<!-- css -->
+		<link rel="stylesheet" type="text/css" media="all" th:href="'..' + @{/css/user_pay_error.css}" />
+		
+		<!-- title -->
+		<title th:text="${is_err} ? '決済エラー確認' : '決済情報設定'"></title>
+		
+	</head>
+	<body>
+		
+		<div id="header">
+			<form method="get" th:action="@{/user_top}">
+				<button type="submit" class="arrow_left" ></button>
+			</form>
+			<span th:text="${is_err} ? '決済エラー確認' : '決済情報設定'"></span>
+			
+			<!-- ログアウト -->
+			<button th:replace="common_replace :: logout"></button>
+		</div>
+		
+		<ul id="err_msg_area">
+			<li th:each="msg : ${msg_list}" th:text="${msg}"></li>
+		</ul>
+		
+		<p id="guide" th:if="${is_err}">
+			再決済時に登録する決済カードの有効期限や残高をご確認の上、再決済を行って下さい。<br/>
+			また、再決済を行いたくない契約は店舗画面から契約を外すことで対象外にすることができます。
+		</p>
+		
+		<p id="guide" th:if="${is_err eq false}">
+			決済時に登録する決済カードの有効期限や残高をご確認の上、登録を行って下さい。<br/>
+			登録後は次回の契約更新時から登録した決済情報が適用されます。
+		</p>
+		
+		<form method="post" onsubmit="return confirmReqCheckout();" th:action="@{/checkout_pay_error}">
+			<button type="submit" class="btn" th:text="${is_err} ? '再決済' : '登録'"></button>
+		</form>
+		
+	</body>
+</html>

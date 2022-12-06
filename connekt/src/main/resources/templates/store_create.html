@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+
+<html lang="ja" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+	<head>
+		
+		<!-- meta -->
+		<head th:replace="common_replace :: meta"></head>
+		
+		<!-- javascript -->
+		<script type="text/javascript" th:src="'..' + @{/javascript/library/chosen.min.js}"></script>
+		<script type="text/javascript" th:src="'..' + @{/javascript/store_create.js}"></script>
+		
+		<!-- css -->
+		<link rel="stylesheet" type="text/css" media="all" th:href="'..' + @{/css/library/chosen.min.css}" />
+		<link rel="stylesheet" type="text/css" media="all" th:href="'..' + @{/css/store_create.css}" />
+		
+		<!-- title -->
+		<title th:text="${is_create} ? '店舗登録' : '店舗設定'"></title>
+		
+	</head>
+	<body>
+		
+		<div id="header">
+			<form method="get" th:action="${is_create} ? @{/login} : @{/store_top}">
+				<button type="submit" class="arrow_left" ></button>
+			</form>
+			<span th:text="${is_create} ? '店舗登録' : '店舗設定'"></span>
+			
+			<div th:unless="${is_create}">
+				<button th:replace="common_replace :: logout"></button>
+			</div>
+		</div>
+		
+		<!-- メッセージ -->
+		<ul th:replace="common_replace :: info_messages"></ul>
+		<!-- エラーメッセージ -->
+		<ul th:replace="common_replace :: error_messages"></ul>
+		
+		<div>
+			<form method="post" onsubmit="return checkPassword()" th:action="${is_create} ? @{/create_store} : @{/save_store}" th:object="${store}">
+				
+				<label class="inpt" th:style="${is_create} ? 'display:none;'">
+					<span>ID</span>
+					<input th:type="${is_create} ? 'hidden':'text'" readonly th:field="*{id}">
+				</label>
+				<label class="inpt">
+					<span>メールアドレス</span>
+					<input type="email" th:field="*{email}" required th:readonly="not ${is_create}"/>
+				</label>
+				<label class="inpt">
+					<span>店舗名</span>
+					<input type="text" th:field="*{store_name}" required/>
+				</label>
+				
+				<!-- https://appsol-one.com/ui/chosen/#%E3%82%B5%E3%83%B3%E3%83%97%E3%83%AB -->
+				<label class="inpt">
+					<span>銀行</span>
+					<select id="bank_name" th:field="*{bank_name}" data-placeholder="選択してください" style="width:200px;"></select>
+					<input type="hidden" th:field="*{bank_code}" class="code" id="bank_code" value="" maxlength="4" required/>
+				</label>
+				<label class="inpt">
+					<span>支店</span>
+					<select id="bank_branch_name" th:field="*{branch_name}" data-placeholder="選択してください" style="width:200px;"></select>
+					<input type="hidden" th:field="*{branch_code}" class="code" id="bank_branch_code" value="" maxlength="4" required/>
+				</label>
+				
+				<label class="inpt">
+					<span>預金種別</span>
+					<select id="type" th:field="*{type}" required>
+						<option value="1">総合</option>
+						<option value="2">個人</option>
+					</select>
+				</label>
+				<label class="inpt">
+					<span>口座番号</span>
+					<input type="number" th:field="*{account_number}" required />
+				</label>
+				<label class="inpt">
+					<span>受取人名</span>
+					<input type="text" th:field="*{name}" required />
+				</label>
+				<!-- 
+				<label class="inpt">
+					<span>プラン選択欄設定</span>
+					<select th:field="*{select_type}" required>
+						<option value="0">プラン(単一選択)及びオプション(複数選択)を表示</option>
+						<option value="1">プラン(単一選択)のみ表示</option>
+						<option value="2">オプション(複数選択)のみ表示※表記はプランになります</option>
+					</select>
+					<span class="sub_label">※単一選択:1顧客1プランのみ選択可・複数選択:1顧客が複数選択可能</span>
+				</label>
+				 -->
+				<label class="inpt" th:if="${is_create eq false}">
+					<span>設定画面へのアクセス認証</span>
+					<small>(アクセス時パスワード認証が設けられ、登録メールアドレス宛に認証パスワードが送信されます)</small>
+					<input type="checkbox" th:field="*{is_cert}" />
+				</label>
+				
+				<label class="inpt" th:if="${is_create eq false}">
+					<span>ディスカウントID</span>
+					<input type="text" readonly th:field="*{discount_id}">
+				</label>
+				<label class="inpt" th:if="${is_create eq false}">
+					<span>ディスカウント対象ID</span>
+					<input type="search" autocomplete="off" th:field="*{discount_target}">
+				</label>
+				
+				<label class="inpt">
+					<span>パスワード</span>
+					<small>(変更しない場合は空欄のまま保存してください)</small>
+					<input id="pw" type="password" autocomplete="new-password" th:field="*{password}" th:required="${is_create}"/>
+				</label>
+				<label class="inpt">
+					<span>パスワード(確認用)</span>
+					<input id="pw_temp" type="password" th:field="*{password_temp}" th:required="${is_create}"/>
+				</label>
+				
+				<button class="btn" type="submit" th:text="${is_create} ? '登録':'保存'"></button>
+			</form>
+			
+			<!-- 店舗削除 -->
+			<form th:if="${is_create eq false}" method="post" onsubmit="return confirmStoreDelete();" th:action="@{/delete_store}">
+				<button class="btn" type="submit">店舗を削除</button>
+			</form>
+		</div>
+	</body>
+</html>

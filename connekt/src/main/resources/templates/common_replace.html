@@ -1,0 +1,186 @@
+<!DOCTYPE HTML>
+
+<html lang="ja" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+	
+	<head>
+		
+		<!-- meta -->
+		<head th:fragment="meta">
+			<!-- エンコード -->
+			<meta charset="UTF-8"/>
+			<!-- cache削除(ie用) -->
+			<meta http-equiv="Pragma" content="no-cache">
+			<!-- cache削除(chome用) -->
+			<meta http-equiv="Cache-Control" content="no-cache">
+			<!-- ページの有効期限更新 -->
+			<meta http-equiv="Expires" content="0">
+			<!-- スマホレイアウト -->
+			<meta name="viewport"
+				content="width=320,
+				height=480,
+				initial-scale=0.9,
+				minimum-scale=0.9,
+				maximum-scale=2.0,
+				user-scalable=yes" />
+			
+			<!-- javascript -->
+			<script type="text/javascript" th:src="'..' + @{/javascript/library/jquery-1.12.4.min.js}"></script>
+			<script type="text/javascript" th:src="'..' + @{/javascript/common.js}"></script>
+			
+			<!-- css -->
+			<link rel="stylesheet" type="text/css" media="all" th:href="'..' + @{/css/common.css}" />
+				
+			<!-- favicon -->
+			<link rel="shortcut icon" th:href="'..' + @{/images/favicon.ico}"/>
+		</head>
+		
+	</head>
+	
+	<body>
+		
+		<!-- エラーメッセージ -->
+		<ul id="error_messages" th:fragment="error_messages">
+			<li th:each="error_message : ${error_messages}" th:text="${error_message}"></li>
+		</ul>
+		<!-- インフォメッセージ -->
+		<ul id="info_messages" th:fragment="info_messages">
+			<li th:each="info_message : ${info_messages}" th:text="${info_message}"></li>
+		</ul>
+		
+		<!-- テキストダイアログ -->
+		<div id="modal_area" class="modal_area" th:fragment="plan_modal">
+			<div id="modal_title" class="modal_title"></div>
+			<textarea id="modal_text" class="modal_text"></textarea>
+			<button class="close_btn" onclick="togglePlanModal()">閉じる</button>
+		</div>
+		
+		<!-- ログアウト -->
+		<form id="logout_form" th:fragment="logout" method="get" th:action="@{/logout}" onSubmit="return logout();">
+			<button type="submit"></button>
+		</form>
+		
+		<!-- プラン・オプション編集 -->
+		<div th:fragment="plan_edit_area(table_name)">
+			<input type="hidden" th:field="*{id}" required/>
+			<input type="hidden" th:field="*{store_id}" required/>
+			<input type="hidden" th:field="*{is_delete}" required/>
+			
+			<label class="inpt">
+				<span>[[${table_name}]]名</span>
+				<input type="text" th:field="*{name}" maxlength="100" autofocus required/>
+			</label>
+			
+			<label class="inpt">
+				<span>料金(円)</span>
+				<span class="inpt_warning" th:if="*{id} eq 0">※保存後に変更することができない項目です</span>
+				<input type="number" min="0" max="999999"th:field="*{price}" th:readonly="*{id} != 0" required/>
+			</label>
+			
+			<label class="inpt">
+				<span>[[${table_name}]]説明</span>
+				<textarea maxlength="255" th:field="*{description}"></textarea>
+			</label>
+			
+			<label class="inpt interval">
+				<span>顧客に請求を行う周期</span>
+				<span class="inpt_warning" th:if="*{id} eq 0">※保存後に変更することができない項目です</span>
+				<input type="number" min="1" max="12" id="planInterval" th:field="*{plan_interval}" onchange="setIntervalHead()" th:readonly="*{id} != 0" required/>
+				<span class="unit">ヵ月周期</span>
+			</label>
+			
+			<label class="inpt interval">
+				<span>請求周期ごとの利用回数上限</span>
+				<span class="inpt_warning" th:if="*{id} eq 0">※保存後に変更することができない項目です</span>
+				
+				<input type="number" id="interval_head" max="99" disabled/>
+				<span class="unit">ヵ月に</span>
+				
+				<input type="number" min="1" max="99" th:field="*{count}" th:readonly="*{id} != 0" required/>
+				<span class="unit">回まで利用可能</span>
+			</label>
+			
+			<button type="submit" class="btn">保存</button>
+		</div>
+		
+		<!-- フッター -->
+		<div id="footer" th:fragment="footer">
+			<form method="get" th:action="@{/logout}" onSubmit="return logout();">
+				<button>ログアウト</button>
+			</form>
+		</div>
+		
+		<!-- QRリーダー -->
+		<div id="qr_canvas_div" th:fragment="qr_reader_area">
+			<video id="js-video"></video>
+			<canvas id="preview"></canvas>
+			<p id="qr_sp_txt">パソコン以外の端末である場合はこのまま閉じるを押し、QRコード読取を終了して下さい</p>
+			<p id="qr_loading_txt">QRコードリーダーを起動中です</p>
+		</div>
+		
+		<!-- 請求一覧エリア -->
+		<div th:fragment="sales_area(isStore)">
+			<div class="head_title">
+				請求期間選択
+			</div>
+			
+			<form method="post" th:action="${isStore} ? @{/store_sales_search} : @{/user_sales_search}" th:object="${form}">
+				<div>
+					<label class="inpt">
+						開始日
+						<input type="date" th:field="*{start_date_str}" onchange="$('#_start_date_str').val(this.value)"/>
+					</label>
+					<label class="inpt">
+						終了日
+						<input type="date" th:field="*{end_date_str}" onchange="$('#_end_date_str').val(this.value)"/>
+					</label>
+				</div>
+				<button type="submit" class="btn">表示</button>
+			</form>
+			
+			<div class="head_title">
+				請求一覧
+				<div class="head_sub">「請求期間選択」で選択された期間内の請求を表示</div>
+			</div>
+			
+			<!-- ヘッダー -->
+			<table class="sales_list" id="tb_header">
+				<tr>
+					<th>支払日</th>
+					<th>料金</th>
+					<th>プラン</th>
+					<th>顧客名</th>
+					<th>Email</th>
+				</tr>
+			</table>
+			
+			<!-- ボディ -->
+			<div id="tb_body_div">
+				<table class="sales_list" id="tb_body">
+					<tr th:each="listForm : ${list}">
+						<td th:text="${#dates.format(listForm.use_date, 'yyyy/MM/dd HH:mm:ss')}"></td>
+						<td th:text="'￥' + ${listForm.price}"></td>
+						<td th:text="${listForm.name}"></td>
+						<td th:text="${listForm.user_name}"></td>
+						<td th:text="${listForm.email}"></td>
+					</tr>
+				</table>
+			</div>
+			
+			<!-- 合計 -->
+			<div id="sum" th:text="'合計 : ￥' + ${sum}"></div>
+			
+			<div class="head_title">
+				請求書
+				<div class="head_sub">「請求期間選択」の開始日で選択された月の請求を出力</div>
+			</div>
+			
+			<form method="post" th:action="${isStore} ? @{/export_store_sales} : @{/export_user_sales}" th:object="${form}" target="_blank">
+				
+				<input type="hidden" id="_start_date_str" th:field="*{start_date_str}"/>
+				<input type="hidden" id="_end_date_str" th:field="*{end_date_str}"/>
+				
+				<button type="submit" class="btn">請求書出力</button>
+			</form>
+		</div>
+	</body>
+</html>

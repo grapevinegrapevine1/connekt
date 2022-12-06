@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+
+<html lang="ja" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+	<head>
+		
+		<!-- meta -->
+		<head th:replace="common_replace :: meta"></head>
+		
+		<!-- title -->
+		<title>認証メール再送信</title>
+		
+	</head>
+	<body>
+		<div id="header">
+			<form method="get" th:action="@{/login}">
+				<button type="submit" class="arrow_left" ></button>
+			</form>
+			<span>認証メール再送信</span>
+		</div>
+		
+		<!-- メッセージ -->
+		<ul th:replace="common_replace :: info_messages"></ul>
+		<!-- エラーメッセージ -->
+		<ul th:replace="common_replace :: error_messages"></ul>
+		
+		<form method="post" th:action="${is_user eq true} ? @{/user_recert} : @{/store_recert}" th:object="${forgetForm}">
+			
+			<label class="inpt">メールアドレス
+				<input type="email" th:field="*{email}" required>
+			</label>
+			
+			<label class="inpt">
+				<span th:text="${is_user eq true} ? '氏名' : '店舗名'"></span>
+				<input type="text" th:field="*{name}" required/>
+			</label>
+			
+			<p>送信ボタンを押すと、入力されたメールアドレス宛にメールが送信されます。</p>
+			
+			<button type="submit" class="btn">メール送信</button>
+		</form>
+	</body>
+</html>

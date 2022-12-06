@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+
+<html lang="ja" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+	<head>
+		
+		<!-- meta -->
+		<head th:replace="common_replace :: meta"></head>
+		
+		<!-- javascript -->
+		<script type="text/javascript" th:src="'..' + @{/javascript/store_plan_edit.js}"></script>
+		
+		<!-- css -->
+		<link rel="stylesheet" type="text/css" media="all" th:href="'..' + @{/css/store_plan_edit.css}" />
+		
+		<!-- title -->
+		<title>プラン編集</title>
+		
+	</head>
+	<body>
+		<div id="header">
+			<form method="post" th:action="@{/store_plan}">
+				<button type="submit" class="arrow_left"></button>
+			</form>
+			<span>プラン編集</span>
+			
+			<!-- ログアウト -->
+			<button th:replace="common_replace :: logout"></button>
+		</div>
+		
+		<!-- メッセージ -->
+		<ul th:replace="common_replace :: info_messages"></ul>
+		<!-- エラーメッセージ -->
+		<ul th:replace="common_replace :: error_messages"></ul>
+		
+		<form method="post" th:action="@{/delete_plan}" th:object="${plan}"th:if="${plan.is_create eq false}" onSubmit="return confirmDelete();">
+			
+			<input type="hidden" th:field="*{id}" required/>
+			<input type="hidden" th:field="*{store_id}" required/>
+			<input type="hidden" th:field="*{name}" required/>
+			<input type="hidden" th:field="*{price}" required/>
+			<input type="hidden" th:field="*{plan_interval}" required/>
+			<input type="hidden" th:field="*{count}" required/>
+			<input type="hidden" th:field="*{is_delete}" required/>
+			
+			<button type="submit" class="btn_3">削除</button>
+		</form>
+		
+		<form method="post" th:action="@{/save_plan}" th:object="${plan}">
+			
+			<!-- オプションエリア -->
+			<div th:replace="common_replace :: plan_edit_area(プラン)"></div>
+			
+		</form>
+	</body>
+</html>

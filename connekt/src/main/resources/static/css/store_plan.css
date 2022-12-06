@@ -1,0 +1,41 @@
+@charset "UTF-8";
+
+.plan_span {
+	display: inline-block;
+	margin-right: 10px;
+	width: calc(100% - 90px);
+}
+
+.plan_name {
+	font-weight: bold;
+	margin-right: 13px;
+	word-break: break-all;
+}
+
+.plan_price {
+	margin-right: 8px;
+}
+
+.plan_interval {
+	font-size: 17px;
+}
+
+.plan_edit_btn {
+	font-size: 20px;
+	border-radius: 9px;
+	padding: 5px 0px;
+	border: none;
+	background: #5a6777;
+	color: white;
+	cursor: pointer;
+	width: 100%;
+}
+
+.plan_form {
+	display: inline-block;
+	min-width: 70px;
+}
+
+#option_head {
+	margin-top: 35px;
+}

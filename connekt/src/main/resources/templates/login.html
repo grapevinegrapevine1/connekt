@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+
+<html lang="ja" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+	<head>
+		
+		<!-- meta -->
+		<head th:replace="common_replace :: meta"></head>
+		
+		<!-- javascript -->
+		<script type="text/javascript" th:src="'..' + @{/javascript/login.js}"></script>
+		
+		<!-- css -->
+		<link rel="stylesheet" type="text/css" media="all" th:href="'..' + @{/css/login.css}" />
+		
+		<!-- title -->
+		<title>ログイン</title>
+		
+	</head>
+	<body>
+		
+		<div id="area">
+			
+			<!-- タブ -->
+			<div id="chn_btn_area">
+				<button id="cng_btn_user" class="cng_btn focus_tab_user" onclick="changeForm(1)">ユーザー用</button>
+				<button id="cng_btn_store" class="cng_btn" onclick="changeForm(2)">店舗用</button>
+			</div>
+			
+			<!-- 入力エリア -->
+			<div id="user_area">
+				
+				<!-- エラーメッセージ -->
+				<ul th:replace="common_replace :: error_messages"></ul>
+				<!-- メッセージ -->
+				<ul th:replace="common_replace :: info_messages"></ul>
+				
+				<!-- ログイン -->
+				<form method="post" th:action="@{/login}" onSubmit="disableLoginBtn();" th:object="${user}">
+					
+					<input type="hidden" id="is_user_form" name="is_user_form" th:value="${is_user_form} != null ? ${is_user_form} : 1"/>
+					
+					<label>
+						<span>メールアドレス</span>
+						<input type="email" autocomplete="email" th:field="*{email}" autofocus required/>
+					</label>
+					<label>
+						<span>パスワード</span>
+						<input type="password" autocomplete="password" th:field="*{password}" required/>
+					</label>
+					
+					<button id="login_btn" type="submit">ログイン</button>
+				</form>
+				
+				<!-- ﾊﾟｽﾜｰﾄﾞ忘れリンク -->
+				<form id="user_forget" class="forget" method="get" th:action="@{/user_forget}">
+					<button class="btn_link" type="submit">パスワードを忘れた場合はこちら</button>
+				</form>
+				<form id="store_forget" class="forget" method="get" th:action="@{/store_forget}">
+					<button class="btn_link" type="submit">パスワードを忘れた場合はこちら</button>
+				</form>
+				
+				<!-- ユーザー作成 -->
+				<form id="user_form" method="get" th:action="@{/user_create}">
+					<button id="create_btn" type="submit">新規登録</button>
+				</form>
+				
+				<!-- 店舗作成 -->
+				<form id="store_form" method="get" th:action="@{/store_create}">
+					<button id="create_btn" type="submit">新規登録</button>
+				</form>
+				
+				<!-- 認証再送信 -->
+				<form id="user_recert" class="recert" method="get" th:action="@{/user_recert_input}">
+					<button class="btn_link" type="submit">認証メール再送信</button>
+				</form>
+				<form id="store_recert" class="recert" method="get" th:action="@{/store_recert_input}">
+					<button class="btn_link" type="submit">認証メール再送信</button>
+				</form>
+			</div>
+			
+		</div>
+		
+		<!-- js -->
+		<script type="text/javascript" th:inline="javascript">
+		</script>
+	</body>
+</html>

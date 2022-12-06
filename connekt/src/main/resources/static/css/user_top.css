@@ -1,0 +1,14 @@
+@charset "UTF-8";
+
+#pay_err_btn{
+	background:#dd3636;
+}
+
+.accordion_panel li{
+	text-align:left;
+}
+
+#qr_canvas_div{
+	background: no-repeat;
+	border: none;
+}

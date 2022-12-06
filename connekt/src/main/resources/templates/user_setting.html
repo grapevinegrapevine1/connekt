@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+
+<html lang="ja" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+	<head>
+		
+		<!-- meta -->
+		<head th:replace="common_replace :: meta"></head>
+		
+		<!-- javascript -->
+		<script type="text/javascript" th:src="'..' + @{/javascript/user_setting.js}"></script>
+		
+		<!-- css -->
+		<link rel="stylesheet" type="text/css" media="all" th:href="'..' + @{/css/user_setting.css}" />
+		
+		<!-- title -->
+		<title th:text="${is_create} ? 'ユーザー登録' : 'ユーザー設定'"></title>
+		
+	</head>
+	<body>
+		
+		<div id="header">
+			<form method="get" th:action="${is_create} ? @{/login} : @{/user_top}">
+				<button type="submit" class="arrow_left" ></button>
+			</form>
+			
+			<span th:text="${is_create} ? 'ユーザー登録' : 'ユーザー設定'"></span>
+			
+			<!-- ログアウト -->
+			<span th:if="${is_create eq false}">
+				<button  th:replace="common_replace :: logout"></button>
+			</span>
+		</div>
+		
+		<!-- ユーザー削除 -->
+		<form th:if="${is_create eq false}" method="post" onsubmit="return deleteUser()" th:action="@{/delete_user}">
+			
+			<input type="hidden" th:field="${user.id}">
+			<button id="delete_usr_btn" class="btn_4">削除</button>
+		</form>
+		
+		<!-- メッセージ -->
+		<ul th:replace="common_replace :: info_messages"></ul>
+		<!-- エラーメッセージ -->
+		<ul th:replace="common_replace :: error_messages"></ul>
+		
+		<form method="post" onsubmit="return checkPassword()" th:action="${is_create} ? @{/create_user} : @{/save_user}" th:object="${user}">
+			
+			<label class="inpt" th:style="${is_create} ? 'display:none;'">ID
+				<input th:type="${is_create} ? 'hidden':'text'" readonly th:field="*{id}">
+			</label>
+			
+			<label class="inpt">メールアドレス
+				<input type="email" th:field="*{email}" required th:readonly="not ${is_create}">
+			</label>
+			
+			<label class="inpt">氏名
+				<input type="text" th:field="*{name}" required/>
+			</label>
+			
+			<label class="inpt">パスワード(変更する場合は入力、変更しない場合は未入力で保存して下さい)
+				<input id="pw" type="password" th:field="*{password}" th:required="${is_create}" />
+			</label>
+			
+			<label class="inpt">パスワード(確認用)
+				<input id="pw_temp" type="password" th:field="*{password_temp}" th:required="${is_create}" />
+			</label>
+			
+			<input type="hidden" th:field="*{status}">
+			
+			<button class="btn" type="submit" th:text="${is_create} ? 'クレジットカード登録へ':'保存'"></button>
+		</form>
+	</body>
+</html>

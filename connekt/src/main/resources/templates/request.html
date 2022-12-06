@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+
+<html lang="ja" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+	<head>
+		<!-- エンコード -->
+		<meta charset="UTF-8"/>
+		<!-- cache削除(ie用) -->
+		<meta http-equiv="Pragma" content="no-cache">
+		<!-- cache削除(chome用) -->
+		<meta http-equiv="Cache-Control" content="no-cache">
+		<!-- ページの有効期限更新 -->
+		<meta http-equiv="Expires" content="0">
+		<!-- スマホレイアウト -->
+		<meta name="viewport"
+			content="width=320,
+			height=480,
+			initial-scale=1.0,
+			minimum-scale=1.0,
+			maximum-scale=2.0,
+			user-scalable=yes" />
+
+		<!-- favicon -->
+		<link rel="shortcut icon" th:href="'..' + @{/images/favicon.ico}"/>
+		
+		<!-- javascript -->
+		<script type="text/javascript" th:src="'..' + @{/javascript/library/jquery-1.12.4.min.js}"></script>
+		<script src="https://polyfill.io/v3/polyfill.min.js?version=3.52.1&features=fetch"></script>
+		<script src="https://js.stripe.com/v3/"></script>
+		
+		<!-- css -->
+		<link rel="stylesheet" type="text/css" media="all" th:href="'..' + @{/css/request.css}" />
+		
+		<!-- title -->
+		<title>決済登録</title>
+	</head>
+	<body>
+	<form action="/pay" method="POST">
+		<input type="text" value="4242424242424242">
+		<script src="https://checkout.stripe.com/checkout.js"
+			class="stripe-button" data-key="pk_test_51KaJJABbtACSed8BD7pBOhpDpItTkk38Adbwi3N6RgqmqZlToOVjtUii92RR8i3kp0SuU1rbhEZYwPHfKcZlnNW300EvTZABTb"
+			data-name="Tシャツ" data-description="コットンTシャツ" data-amount="500"
+			data-currency="jpy">
+		</script>
+	</form>
+	
+	<form action="/create" method="POST">
+		<button>プラン作成</button>
+	</form>
+	<form action="/delete" method="POST">
+		<button>プラン削除</button>
+	</form>
+	<form action="/cancel" method="POST">
+		<button>サブスク削除</button>
+	</form>
+	<form action="/new_user_create" method="POST">
+		<button>新ユーザー作成</button>
+	</form>
+	
+	<section>
+		<form action="/checkout" method="POST">
+			<!-- Add a hidden field with the lookup_key of your Price -->
+			<input type="hidden" name="lookup_key" value="plan_LTy4CPXoVLu3sm" />
+			<button id="checkout-and-portal-button" type="submit">Checkout</button>
+		</form>
+	</section>
+	<form action="/select" method="POST">
+		<button>決済情報一覧</button>
+	</form>
+</body>
+</html>

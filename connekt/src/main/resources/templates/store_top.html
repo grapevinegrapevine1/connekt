@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+
+<html lang="ja" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+	<head>
+		
+		<!-- meta -->
+		<head th:replace="common_replace :: meta"></head>
+		
+		<!-- javascript -->
+		<script type="text/javascript" th:src="'..' + @{/javascript/library/jquery.qrcode.min.js}"></script>
+		<script type="text/javascript" th:src="'..' + @{/javascript/store_top.js}"></script>
+		
+		<!-- css -->
+		<link rel="stylesheet" type="text/css" media="all" th:href="'..' + @{/css/store_top.css}" />
+		
+		<!-- title -->
+		<title>トップ</title>
+		
+	</head>
+	<body>
+		<div id="header">
+			<span>トップ</span>
+			
+			<!-- ログアウト -->
+			<button th:replace="common_replace :: logout"></button>
+		</div>
+		
+		<span class="head_1" th:text="${session_store.name}"></span>
+		
+		<!-- メッセージ -->
+		<ul th:replace="common_replace :: info_messages"></ul>
+		<!-- エラーメッセージ -->
+		<ul th:replace="common_replace :: error_messages"></ul>
+		
+		<details class="accordion_panel">
+			<summary>店舗情報</summary>
+			<div th:text="'店舗ID:' + ${session_store.id} + ''"></div>	
+			<div>
+				ディスカウントID:
+				<span id="copyTarget" th:text="${session_store.discount_id} + ''"></span>
+				<button class="btn_5" onclick="copy_discountId(this);">コピー</button>
+			</div>
+		</details>
+		
+		<form method="post" th:action="@{/store_plan}">
+			<button type="submit" class="btn">プラン設定</button>
+		</form>
+		
+		<form method="get" th:action="@{/store_sales}">
+			<button type="submit" class="btn">契約状況</button>
+		</form>
+		
+		<form th:if="${session_store.is_cert} eq true" method="post" th:action="@{/create_cert}">
+			<button type="submit" class="btn">店舗設定</button>
+		</form>
+		<form th:if="${session_store.is_cert} eq false" method="post" th:action="@{/store_update}">
+			<button type="submit" class="btn">店舗設定</button>
+		</form>
+		
+		<button type="button" class="btn" onclick="toggleQr()">店舗QR表示</button>
+		
+		<form method="get" th:action="@{/store_read}">
+			<button type="submit" class="btn">来客手続</button>
+		</form>
+		
+		<!-- QR -->
+		<div id="qr" class="modal_area">
+			<div id="qr_code"></div>
+			<button class="close_btn" onclick="toggleQr()">閉じる</button>
+		</div>
+		
+		<!-- js -->
+		<script type="text/javascript" th:inline="javascript">
+			/* QR用テキスト */
+			var qrtext = /*[[${session_store.id}]]*/true;
+		</script>
+	</body>
+</html>

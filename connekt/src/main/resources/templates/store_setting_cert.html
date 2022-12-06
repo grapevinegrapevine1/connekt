@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+
+<html lang="ja" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+	<head>
+		
+		<!-- meta -->
+		<head th:replace="common_replace :: meta"></head>
+		
+		<!-- javascript -->
+		<script type="text/javascript" th:src="'..' + @{/javascript/library/jquery.qrcode.min.js}"></script>
+		<script type="text/javascript" th:src="'..' + @{/javascript/store_setting_cert.js}"></script>
+		
+		<!-- css -->
+		<link rel="stylesheet" type="text/css" media="all" th:href="'..' + @{/css/store_setting_cert.css}" />
+		
+		<!-- title -->
+		<title>店舗設定アクセス認証</title>
+		
+	</head>
+	<body>
+				
+		<div id="header">
+			<form method="get" th:action="@{/store_top}">
+				<button type="submit" class="arrow_left" ></button>
+			</form>
+			<span>店舗設定アクセス認証</span>
+			
+			<!-- ログアウト -->
+			<button th:replace="common_replace :: logout"></button>
+		</div>
+		
+		<!-- メッセージ -->
+		<ul th:replace="common_replace :: info_messages"></ul>
+		<!-- エラーメッセージ -->
+		<ul th:replace="common_replace :: error_messages"></ul>
+		
+		<form method="post" th:action="@{/store_update}">
+			
+			<label class="inpt">
+				<span>認証キーを入力して下さい。</span>
+				<input type="text" name="cert_key" required/>
+			</label>
+			
+			<button class="btn" type="submit">次へ</button>
+		</form>
+		
+		<!-- js -->
+		<script type="text/javascript" th:inline="javascript">
+		</script>
+	</body>
+</html>

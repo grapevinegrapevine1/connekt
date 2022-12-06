@@ -1,0 +1,44 @@
+@charset "UTF-8";
+
+#plan_area {
+	padding-bottom: 0px;
+}
+
+#plan_area>.plan_div {
+	margin-bottom: 0px;
+}
+
+#user_nm {
+	font-size: 18px;
+	text-align: center;
+	font-weight: bold;
+}
+
+.plan_span input[type="checkbox"] {
+	width: 15px;
+}
+
+.plan_span {
+	display: inline-block;
+	width: calc(100% - 130px);
+}
+
+.plan_div button {
+	width: 120px;
+}
+
+.is_stoped,.err_usr_pay {
+	position: absolute;
+	top: -18px;
+	left: 2px;
+	color: red;
+	font-size: 13px;
+	width: calc(100% - 135px);
+	line-height: 13px;
+}
+
+.sub_info {
+	text-align: center;
+	color: #5a6777;
+	font-size: 15px;
+}

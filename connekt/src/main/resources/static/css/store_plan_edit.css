@@ -1,0 +1,22 @@
+@charset "UTF-8";
+
+.inpt.interval span:not(.unit) {
+	display: block;
+}
+
+.inpt.interval input {
+	width: 20%;
+	min-width: 100px;
+	display: inline-block;
+}
+
+.inpt.interval .unit {
+	font-size: 20px;
+	color: black;
+}
+
+.btn_3{
+	position: absolute;
+	right: 30px;
+	top: 55px;
+}
