@@ -28,6 +28,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 
+import com.ajax.response.AjaxSalesResponse;
 import com.form.StoreSalesForm;
 import com.form.StoreSalesListForm;
 import com.model.Store;
@@ -39,8 +40,8 @@ import com.service.StoreService;
 import com.service.UserService;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Charge;
+import com.stripe.model.ChargeCollection;
 import com.stripe.model.Invoice;
-import com.stripe.model.InvoiceCollection;
 import com.stripe.model.PaymentIntent;
 import com.stripe.model.Refund;
 import com.stripe.model.RefundCollection;
@@ -68,7 +69,7 @@ public class SalesController{
 	 * @param isStore 店舗処理可否(true:店舗処理 / false:ユーザー処理)
 	 * @param id 店舗ID/ユーザーID
 	 */
-	public String disp(Model model, HttpServletRequest req, HttpSession ses, boolean isStore, int id) throws Exception {
+	public String disp(Model model, HttpServletRequest req, HttpSession ses, boolean isStore, String nm, int id) throws Exception {
 
 		// 現在日
 		LocalDate now = LocalDate.now();
@@ -80,7 +81,7 @@ public class SalesController{
 		Date end_date = localDate2Date(end);
 		
 		// 画面表示
-		return disp(new StoreSalesForm(start_date, end_date) , null, model, req, ses, isStore, id);
+		return disp(new StoreSalesForm(start_date, end_date) , null, model, req, ses, isStore, nm, id);
 	}
 	
 	/**
@@ -88,7 +89,7 @@ public class SalesController{
 	 * @param isStore 店舗処理可否(true:店舗処理 / false:ユーザー処理)
 	 * @param id 店舗ID/ユーザーID
 	 */
-	public String disp(StoreSalesForm storeSalesForm, BindingResult bindingResult, Model model, HttpServletRequest req, HttpSession ses, boolean isStore, int id) throws Exception {
+	public String disp(StoreSalesForm storeSalesForm, BindingResult bindingResult, Model model, HttpServletRequest req, HttpSession ses, boolean isStore, String nm, int id) throws Exception {
 		
 		// Validationエラーメッセージ取得
 		String validMsg = CommonUtil.isValid(bindingResult,req);
@@ -99,19 +100,64 @@ public class SalesController{
 		try(Connection conn = connectionUtil.connect()){
 			
 			// 請求情報リスト
-			List<StoreSalesListForm> list = getSalesList(isStore, storeSalesForm, id);
+			List<StoreSalesListForm> list_ch = getSalesList(isStore, storeSalesForm, nm, id);
+			// 返金情報リスト
+			List<StoreSalesListForm> list_re = getRefundList(isStore, storeSalesForm, nm, id);
 			
 			// モデル
 			model.addAttribute("form", storeSalesForm);
 			// リクエスト
-			req.setAttribute("list", list);
-			req.setAttribute("sum",getSalesSumAndFee(list)[0]);
+			req.setAttribute("list_ch", list_ch);
+			req.setAttribute("list_re", list_re);
 			
 			// 遷移
 			return isStore ? Const.PAGE_STORE_SALES : Const.PAGE_USER_SALES;
 			
 		}catch(Exception e){
 			throw e;
+		}
+	}
+	
+	/**
+	 * Ajax データ取得
+	 */
+	public Object dispAjax(boolean isStore, boolean isCharge, StoreSalesForm storeSalesForm, BindingResult bindingResult, Model model, HttpServletRequest req, HttpSession ses) throws Exception {
+		
+		// 遷移先、顧客名/店舗名、ユーザーID/店舗ID
+		String forward = null, nm;
+		int id;
+		if(isStore) {
+			// セッション店舗チェック
+			String sesErrFoward = CommonUtil.isSesStore(ses);
+			if(sesErrFoward != null) forward = sesErrFoward;
+			// セッション店舗情報
+			Store store = CommonUtil.getSessionStore(ses);
+			nm = store.getName();
+			id = store.getId();
+		}else {
+			// セッションユーザーチェック
+			String sesErrFoward = CommonUtil.isSesUser(ses);
+			if(sesErrFoward != null) forward = sesErrFoward;
+			// セッションユーザー情報
+			User user = CommonUtil.getSessionUser(ses);
+			nm = user.getName();
+			id = user.getId();
+		}
+		// 情報リスト
+		List<StoreSalesListForm> list = isCharge ? getSalesList(isStore, storeSalesForm, nm, id) : getRefundList(isStore, storeSalesForm, nm, id);
+		
+		// 正常処理時
+		if(forward == null) {
+			// 返却データ生成
+			AjaxSalesResponse ares = new AjaxSalesResponse();
+			ares.setList(list);
+			ares.setLast(getLast(list, isCharge));
+			// 返却
+			return ares;
+		// 異常時
+		}else {
+			// エラー返却
+			return "error";
 		}
 	}
 	
@@ -133,35 +179,36 @@ public class SalesController{
 	/**
 	 * 請求リスト取得
 	 */
-	private List<StoreSalesListForm> getSalesList(boolean isStore, StoreSalesForm storeSalesForm, int id) throws StripeException {
+	public List<StoreSalesListForm> getSalesList(boolean isStore, StoreSalesForm storeSalesForm, String nm, int id) throws StripeException {
 		
 		// 請求情報リスト
-		List<StoreSalesListForm> list = new ArrayList<StoreSalesListForm>();
+		List<StoreSalesListForm> list_ch = new ArrayList<StoreSalesListForm>();
 		
 		// 対象期間の支払情報リスト
-		InvoiceCollection invoiceCollection;
+		ChargeCollection chargeCollection;
 		
 		// 店舗処理である場合
 		if(isStore) {
 			// 対象期間の支払情報リスト
-			invoiceCollection = stripeUtil.getInvoices(storeSalesForm.getStart_date(), storeSalesForm.getEnd_date());
-			
+			chargeCollection = stripeUtil.getCharges(storeSalesForm.getStart_date(), storeSalesForm.getEnd_date(), storeSalesForm.getLast_ch());
 		// ユーザー処理である場合
 		}else {
 			// セッションユーザー情報
 			User user = userService.find(id);
 			// 対象期間の支払情報リスト
-			invoiceCollection = stripeUtil.getInvoicesByCustomer(user.getStripe_customer_id(), storeSalesForm.getStart_date(), storeSalesForm.getEnd_date());
+			chargeCollection = stripeUtil.getChargesByCustomer(user.getStripe_customer_id(), storeSalesForm.getStart_date(), storeSalesForm.getEnd_date(), storeSalesForm.getLast_ch());
 		}
-		
+
 		// 支払情報リスト数分
-		for(Invoice invoice : invoiceCollection.getData()){
+		for(Charge charge : chargeCollection.getData()){
 			
 			// 支払情報
-			PaymentIntent paymentIntent = invoice.getPaymentIntentObject();
-			// 支払情報が存在する場合(存在しないものは下書きデータ)
-			if(paymentIntent != null) {
+			PaymentIntent paymentIntent = charge.getPaymentIntentObject();
+			// 支払失敗でない & 支払情報が存在する場合(存在しないものは下書きデータ)
+			if(!charge.getStatus().equals("failed") && paymentIntent != null) {
 				
+				// インボイス
+				Invoice invoice = charge.getInvoiceObject();
 				// 対象店舗可否情報
 				IsTarget isTarget = isTargetSubscription(invoice.getSubscriptionObject(), isStore, id);
 				// 対象店舗である場合
@@ -171,21 +218,34 @@ public class SalesController{
 					if(0< invoice.getAmountPaid() && invoice.getStatusTransitions().getPaidAt() != null) {
 						
 						// 手数料
-						long fee = getFee(paymentIntent);
+						long fee = charge.getBalanceTransactionObject().getFee();
 						
 						// ユーザー
 						User user = userService.findByStripeCustomerId(invoice.getCustomer());
 						// 契約名
 						String planName = getPlanNameBySubs(isTarget.getSubscription());
 						// リスト追加
-						setStoreSalesList(list, user, invoice.getStatusTransitions().getPaidAt(), invoice.getAmountPaid(), fee, planName, false);
+						setStoreSalesList(list_ch, charge.getId(), user, nm, invoice.getStatusTransitions().getPaidAt(), invoice.getAmountPaid(), fee, planName, false);
 					}
 				}
 			}
 		}
 		
+		// 頁最終データID設定
+		storeSalesForm.setLast_ch(getLast(list_ch, true));
+		// 返却
+		return list_ch;
+	}
+
+	/**
+	 * 請求リスト取得
+	 */
+	public List<StoreSalesListForm> getRefundList(boolean isStore, StoreSalesForm storeSalesForm, String nm,int id) throws StripeException {
+		
+		// 返金情報リスト
+		List<StoreSalesListForm> list_re = new ArrayList<StoreSalesListForm>();
 		// 対象期間の支払情報リスト
-		RefundCollection refundCollection = stripeUtil.getRefunds(storeSalesForm.getStart_date(), storeSalesForm.getEnd_date());
+		RefundCollection refundCollection = stripeUtil.getRefunds(storeSalesForm.getStart_date(), storeSalesForm.getEnd_date(), storeSalesForm.getLast_re());
 		// 支払情報リスト数分
 		for(Refund refund : refundCollection.getData()){
 
@@ -211,16 +271,26 @@ public class SalesController{
 						// 契約名
 						String planName = "(返金)" + getPlanNameBySubs(isTarget.getSubscription());
 						// リスト追加
-						setStoreSalesList(list, user, refund.getCreated(), refund.getAmount(), fee, planName, true);
+						setStoreSalesList(list_re, refund.getId(), user, nm, refund.getCreated(), refund.getAmount(), fee, planName, true);
 					}
 				}
 			}
 		}
 		
+		// 頁最終データID設定
+		storeSalesForm.setLast_re(getLast(list_re, false));
 		// 返却
-		return list;
+		return list_re;
 	}
 	
+	/**
+	 * 頁最終データID取得
+	 */
+	public String getLast(List<StoreSalesListForm> list, boolean isCharge) {
+		// 情報リストが1回の取得最大件数である場合は、データID返却
+		if(list != null && Const.MAX_SALES_COUNT <= list.size()) return isCharge ? list.get(list.size() - 1).getLast_ch() : list.get(list.size() - 1).getLast_re();
+		return null;
+	}
 	/**
 	 * 手数料取得
 	 */
@@ -265,13 +335,13 @@ public class SalesController{
 	/**
 	 * リスト設定
 	 */
-	private void setStoreSalesList(List<StoreSalesListForm> list, User user, long paidAt, long amountPaid, long balance,String planName, boolean isRefund) {
+	private void setStoreSalesList(List<StoreSalesListForm> list, String last, User user, String nm, long paidAt, long amountPaid, long balance,String planName, boolean isRefund) {
 
 		// フォーム生成
 		StoreSalesListForm storeSalesListForm = new StoreSalesListForm();
 		// メールアドレス
 		storeSalesListForm.setEmail(user.getEmail().replace("@DELETED_", "(削除済ユーザー)"));
-		// ユーザー名
+		// プラン名
 		storeSalesListForm.setName(planName);
 		// 支払日
 		Date user_date = CommonUtil.formatTimestampDate(paidAt);
@@ -280,8 +350,11 @@ public class SalesController{
 		storeSalesListForm.setPrice(isRefund ? -amountPaid : amountPaid);
 		// 手数料
 		storeSalesListForm.setBalance(balance);
-		// 契約名
-		storeSalesListForm.setUser_name(user.getName());
+		// 顧客名/店舗名
+		storeSalesListForm.setUser_name(nm);
+		// 支払/返金情報(次頁取得用)
+		if(isRefund) storeSalesListForm.setLast_re(last);
+		else storeSalesListForm.setLast_ch(last);
 		// リスト追加
 		list.add(storeSalesListForm);
 	}
@@ -370,7 +443,32 @@ public class SalesController{
 				try(Connection conn = connectionUtil.connect()){
 					
 					// 請求情報リスト
-					List<StoreSalesListForm> list = getSalesList(isStore, storeSalesForm, id);
+					List<StoreSalesListForm> list_ch = getSalesList(isStore, storeSalesForm, to, id);
+					// 次頁の開始ID
+					storeSalesForm.setLast_ch(getLast(list_ch, true));
+					// データ続くまで繰り返す
+					while(storeSalesForm.getLast_ch() != null) {
+						List<StoreSalesListForm> list_tmp = getSalesList(isStore, storeSalesForm, to, id);
+						list_ch.addAll(list_tmp);
+						storeSalesForm.setLast_ch(getLast(list_tmp, true));
+					}
+					
+					// 返金情報リスト
+					List<StoreSalesListForm> list_re = getRefundList(isStore, storeSalesForm, to, id);
+					// 次頁の開始ID
+					storeSalesForm.setLast_re(getLast(list_re, false));
+					// データ続くまで繰り返す
+					while(storeSalesForm.getLast_re() != null) {
+						List<StoreSalesListForm> list_tmp = getSalesList(isStore, storeSalesForm, to, id);
+						list_re.addAll(list_tmp);
+						storeSalesForm.setLast_re(getLast(list_tmp, false));
+					}
+					
+					// 一覧データ結合
+					List<StoreSalesListForm> list = new ArrayList<StoreSalesListForm>();;
+					list.addAll(list_ch);
+					list.addAll(list_re);
+					
 					// 売上額
 					long[] sums = getSalesSumAndFee(list);
 					long sum = sums[0];

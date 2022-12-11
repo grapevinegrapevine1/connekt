@@ -11,7 +11,9 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.base.SalesController;
 import com.form.StoreSalesForm;
@@ -43,7 +45,7 @@ public class UserSalesController{
 		
 		// セッションユーザー情報
 		User user = CommonUtil.getSessionUser(ses);
-		return salesController.disp(model, req, ses, isStore, user.getId());
+		return salesController.disp(model, req, ses, isStore, user.getName(), user.getId());
 	}
 	
 	/**
@@ -58,7 +60,19 @@ public class UserSalesController{
 		
 		// セッションユーザー情報
 		User user = CommonUtil.getSessionUser(ses);
-		return salesController.disp(storeSalesForm, bindingResult, model, req, ses, isStore, user.getId());
+		return salesController.disp(storeSalesForm, bindingResult, model, req, ses, isStore, user.getName(), user.getId());
+	}
+	
+	/**
+	 * Ajax 追加一覧データ取得
+	 */
+	@RequestMapping("/user_sales_search_ajax")@ResponseBody
+	public Object dispAjax_charge(@RequestBody @Validated StoreSalesForm storeSalesForm, BindingResult bindingResult, Model model, HttpServletRequest req, HttpSession ses) throws Exception {
+		return salesController.dispAjax(false, true, storeSalesForm, bindingResult, model, req, ses);
+	}
+	@RequestMapping("/user_refund_search_ajax")@ResponseBody
+	public Object dispAjax_refund(@RequestBody @Validated StoreSalesForm storeSalesForm, BindingResult bindingResult, Model model, HttpServletRequest req, HttpSession ses) throws Exception {
+		return salesController.dispAjax(false, false, storeSalesForm, bindingResult, model, req, ses);
 	}
 	
 	/**

@@ -39,6 +39,7 @@ import com.stripe.Stripe;
 import com.stripe.exception.StripeException;
 import com.stripe.model.BalanceTransaction;
 import com.stripe.model.Charge;
+import com.stripe.model.ChargeCollection;
 import com.stripe.model.Customer;
 import com.stripe.model.Invoice;
 import com.stripe.model.InvoiceCollection;
@@ -51,6 +52,7 @@ import com.stripe.model.RefundCollection;
 import com.stripe.model.Subscription;
 import com.stripe.model.SubscriptionCollection;
 import com.stripe.model.checkout.Session;
+import com.stripe.param.ChargeListParams;
 import com.stripe.param.InvoiceListParams;
 import com.stripe.param.InvoiceListParams.Created;
 import com.stripe.param.PaymentIntentConfirmParams;
@@ -240,9 +242,13 @@ public class StripeUtil {
 	/**
 	 * 支払い情報リスト取得
 	 */
-	public InvoiceCollection getInvoices(java.util.Date start_date, java.util.Date end_date) throws StripeException {		
+	public InvoiceCollection getInvoices(java.util.Date start_date, java.util.Date end_date) throws StripeException {
 		// 返却
 		return getInvoicesByCustomer(null, start_date, end_date);
+	}
+	public ChargeCollection getCharges(java.util.Date start_date, java.util.Date end_date, String last_ch) throws StripeException {
+		// 返却
+		return getChargesByCustomer(null, start_date, end_date, last_ch);
 	}
 	/**
 	 * 顧客に紐づく支払い情報リスト取得
@@ -259,7 +265,8 @@ public class StripeUtil {
 					.build();
 		// パラメータ設定
 		com.stripe.param.InvoiceListParams.Builder builder = InvoiceListParams.builder();
-		builder.setCreated(created).setLimit((long) 100)
+		builder.setCreated(created)
+				.setLimit((long) 100)
 				.addExpand("data.subscription")
 				.addExpand("data.payment_intent.charges.data");
 		if(!CommonUtil.isEmpty(customer_id)) builder.setCustomer(customer_id);
@@ -270,6 +277,36 @@ public class StripeUtil {
 		
 		// 返却
 		return invoices;
+	}
+	
+	/**
+	 * 顧客に紐づく支払い情報リスト取得
+	 */
+	public ChargeCollection getChargesByCustomer(String customer_id, java.util.Date start_date, java.util.Date end_date, String last_ch) throws StripeException {
+		
+		// STRIPE キー設定
+		Stripe.apiKey = Const.STRIPE_API_KEY;
+		
+		// 対象期間
+		com.stripe.param.ChargeListParams.Created created = com.stripe.param.ChargeListParams.Created.builder()
+					.setGte(CommonUtil.getUnixToTime(start_date))
+					.setLte(CommonUtil.getUnixToTime(end_date))
+					.build();
+		// パラメータ設定
+		com.stripe.param.ChargeListParams.Builder builder = ChargeListParams.builder();
+		builder.setCreated(created)
+				.setLimit((long) Const.MAX_SALES_COUNT)
+				.addExpand("data.balance_transaction")
+				.addExpand("data.payment_intent")
+				.addExpand("data.invoice.subscription");
+		if(!CommonUtil.isEmpty(customer_id)) builder.setCustomer(customer_id);
+		if(!CommonUtil.isEmpty(last_ch)) builder.setStartingAfter(last_ch);
+		ChargeListParams params = builder.build();
+		
+		// 支払い情報リスト取得
+		ChargeCollection charges = Charge.list(params);
+		// 返却
+		return charges;
 	}
 	
 	/**
@@ -285,7 +322,7 @@ public class StripeUtil {
 	/**
 	 * 返金情報リスト取得
 	 */
-	public RefundCollection getRefunds(java.util.Date start_date, java.util.Date end_date) throws StripeException {
+	public RefundCollection getRefunds(java.util.Date start_date, java.util.Date end_date, String last_re) throws StripeException {
 
 		// STRIPE キー設定
 		Stripe.apiKey = Const.STRIPE_API_KEY;
@@ -296,7 +333,12 @@ public class StripeUtil {
 					.setLte(CommonUtil.getUnixToTime(end_date))
 					.build();
 		// パラメータ設定
-		RefundListParams params = RefundListParams.builder().setCreated(created).addExpand("data.payment_intent.invoice.subscription").build();
+		com.stripe.param.RefundListParams.Builder builder = RefundListParams.builder()
+					.setLimit((long) Const.MAX_SALES_COUNT)
+					.setCreated(created)
+					.addExpand("data.payment_intent.invoice.subscription");;
+		if(!CommonUtil.isEmpty(last_re)) builder.setStartingAfter(last_re);
+		RefundListParams params = builder.build();
 		// 支払い情報リスト取得
 		RefundCollection refunds = Refund.list(params);
 		

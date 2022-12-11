@@ -16,14 +16,17 @@ public class Const {
 	// ログイン画面 選択タブ
 	public static final String TAB_USER = "1";
 	public static final String TAB_STORE = "2";
-	
+	// 削除済ユーザーメールアドレスヘッダー
 	public static final String USER_DELETED_EMAIL = "@DELETED_";
-	
+	// 削除可否
 	public static final int IS_DELETED = 1;
-	
+	// Connekt手数料
 	public static final double COMMISSION = 0.034;
-	
+	// Stripe手数料
 	public static final double COMMISSION_STRIPE = 0.036;
+	
+	// 請求データ取得件数
+	public static final int MAX_SALES_COUNT = 10;
 	
 	public static final int USER_STATUS_DEAULT = 0;
 	public static final int USER_STATUS_SET_CARD = 1;

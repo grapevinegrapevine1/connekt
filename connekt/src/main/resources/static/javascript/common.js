@@ -11,7 +11,7 @@ $(function() {
 	// サブミット時ローディング表示イベント設定
 	$("form").each(function(index, elm) {
 		let $fm = $(elm);
-		$fm.attr("onSubmit", $fm.attr("onSubmit") + ";dispLoading();");
+		if($fm.prop("target") != "_blank") $fm.attr("onSubmit", $fm.attr("onSubmit") + ";dispLoading();");
 	});
 });
 
@@ -30,6 +30,9 @@ function dispLoading(){
 	$spinnerBox.append($("<div>",{"class":"white-orbit w3 leo"}));
 	// 画面表示
 	$("body").append($loading);
+}
+function removeLoading(){
+	$("#loading").remove();
 }
 
 // 店舗プラン・オプション編集画面 期間値更新
@@ -69,20 +72,25 @@ function createQr($img, qrtext){
 	$img.qrcode({ text: utf8qrtext });
 }
 
+// 日付をYYYY-MM-DDの書式で返すメソッド
+function formatDate(date) {
+	return date.getFullYear() + '/' + ('0' + (date.getMonth() + 1)).slice(-2) + '/' +('0' + date.getDate()).slice(-2) + ' ' +  ('0' + date.getHours()).slice(-2) + ':' + ('0' + date.getMinutes()).slice(-2) + ':' + ('0' + date.getSeconds()).slice(-2);
+}
+
 // プランテキストモーダル表示
 function togglePlanModal(btnElem){
 	
 	var $btnElem = $(btnElem);
 	var $title = $btnElem.parent().children(".planModalTitle");
 	var $text = $btnElem.parent().children(".contract_text");
-	
+
 	var $modalTitle = $("#modal_title");
 	var $modalArea = $("#modal_area");
 	var $modal_text = $("#modal_text");
-	
+
 	$modalArea.toggle();
-	
-	if($modalArea.css("display") == "none"){
+
+	if ($modalArea.css("display") == "none"){
 		
 		$modalTitle.text("");
 		$modal_text.text("");

@@ -7,6 +7,7 @@
 		<head th:replace="common_replace :: meta"></head>
 		
 		<!-- javascript -->
+		<script type="text/javascript" th:src="'..' + @{/javascript/common_sales.js}"></script>
 		<script type="text/javascript" th:src="'..' + @{/javascript/user_sales.js}"></script>
 		
 		<!-- css -->
@@ -35,5 +36,8 @@
 		
 		<!-- 請求一覧 -->
 		<div th:replace="common_replace :: sales_area(false)"></div>
+		
+		<!-- AjaxリクエストURLヘッダー -->
+		<input type="hidden" id="ajax_url_header" value="user" />
 	</body>
 </html>

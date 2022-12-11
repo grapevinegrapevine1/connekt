@@ -133,6 +133,11 @@
 						終了日
 						<input type="date" th:field="*{end_date_str}" onchange="$('#_end_date_str').val(this.value)"/>
 					</label>
+					
+					<!-- 取得データ最後の支払情報 -->
+					<input type="hidden" th:field="*{last_ch}" />
+					<!-- 取得データ最後の返金情報 -->
+					<input type="hidden" th:field="*{last_re}" />
 				</div>
 				<button type="submit" class="btn">表示</button>
 			</form>
@@ -143,20 +148,20 @@
 			</div>
 			
 			<!-- ヘッダー -->
-			<table class="sales_list" id="tb_header">
+			<table class="sales_list tb_header">
 				<tr>
 					<th>支払日</th>
 					<th>料金</th>
 					<th>プラン</th>
-					<th>顧客名</th>
+					<th th:text="${isStore} ? '顧客名' : '店舗名'"></th>
 					<th>Email</th>
 				</tr>
 			</table>
 			
 			<!-- ボディ -->
-			<div id="tb_body_div">
+			<div class="tb_body_div" id="chargeBody">
 				<table class="sales_list" id="tb_body">
-					<tr th:each="listForm : ${list}">
+					<tr th:each="listForm : ${list_ch}">
 						<td th:text="${#dates.format(listForm.use_date, 'yyyy/MM/dd HH:mm:ss')}"></td>
 						<td th:text="'￥' + ${listForm.price}"></td>
 						<td th:text="${listForm.name}"></td>
@@ -166,8 +171,36 @@
 				</table>
 			</div>
 			
-			<!-- 合計 -->
-			<div id="sum" th:text="'合計 : ￥' + ${sum}"></div>
+			<!-------------------------------- 返金明細 -------------------------------------->
+			
+			<div class="head_title" id="refundTitle">
+				返金一覧
+				<div class="head_sub">「請求期間選択」で選択された期間内の請求を表示</div>
+			</div>
+			
+			<!-- ヘッダー -->
+			<table class="sales_list tb_header">
+				<tr>
+					<th>支払日</th>
+					<th>料金</th>
+					<th>プラン</th>
+					<th th:text="${isStore} ? '顧客名' : '店舗名'"></th>
+					<th>Email</th>
+				</tr>
+			</table>
+			
+			<!-- ボディ -->
+			<div class="tb_body_div" id="refundBody">
+				<table class="sales_list" id="tb_body">
+					<tr th:each="listForm : ${list_re}">
+						<td th:text="${#dates.format(listForm.use_date, 'yyyy/MM/dd HH:mm:ss')}"></td>
+						<td th:text="'￥' + ${listForm.price}"></td>
+						<td th:text="${listForm.name}"></td>
+						<td th:text="${listForm.user_name}"></td>
+						<td th:text="${listForm.email}"></td>
+					</tr>
+				</table>
+			</div>
 			
 			<div class="head_title">
 				請求書
