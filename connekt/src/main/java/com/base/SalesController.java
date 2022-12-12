@@ -40,11 +40,9 @@ import com.service.StoreService;
 import com.service.UserService;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Charge;
-import com.stripe.model.ChargeCollection;
 import com.stripe.model.Invoice;
 import com.stripe.model.PaymentIntent;
 import com.stripe.model.Refund;
-import com.stripe.model.RefundCollection;
 import com.stripe.model.Subscription;
 import com.util.CommonUtil;
 import com.util.ConnectionUtil;
@@ -185,7 +183,7 @@ public class SalesController{
 		List<StoreSalesListForm> list_ch = new ArrayList<StoreSalesListForm>();
 		
 		// 対象期間の支払情報リスト
-		ChargeCollection chargeCollection;
+		Iterable<Charge> chargeCollection;
 		
 		// 店舗処理である場合
 		if(isStore) {
@@ -200,7 +198,7 @@ public class SalesController{
 		}
 
 		// 支払情報リスト数分
-		for(Charge charge : chargeCollection.getData()){
+		for(Charge charge : chargeCollection){
 			
 			// 支払情報
 			PaymentIntent paymentIntent = charge.getPaymentIntentObject();
@@ -245,9 +243,9 @@ public class SalesController{
 		// 返金情報リスト
 		List<StoreSalesListForm> list_re = new ArrayList<StoreSalesListForm>();
 		// 対象期間の支払情報リスト
-		RefundCollection refundCollection = stripeUtil.getRefunds(storeSalesForm.getStart_date(), storeSalesForm.getEnd_date(), storeSalesForm.getLast_re());
+		Iterable<Refund> refundCollection = stripeUtil.getRefunds(storeSalesForm.getStart_date(), storeSalesForm.getEnd_date(), storeSalesForm.getLast_re());
 		// 支払情報リスト数分
-		for(Refund refund : refundCollection.getData()){
+		for(Refund refund : refundCollection){
 
 			// 支払情報
 			PaymentIntent paymentIntent = refund.getPaymentIntentObject();
@@ -311,7 +309,7 @@ public class SalesController{
 		String planNm = "";
 		// プランID
 		Object plan_id_obj = subscription.getMetadata().get("plan_id");
-		// TODO (本来不要) プランIDが存在する場合
+		// プランIDが存在する場合
 		if(plan_id_obj != null) {
 			// プランID
 			int plan_id = Integer.parseInt(plan_id_obj.toString());

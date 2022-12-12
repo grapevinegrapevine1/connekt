@@ -39,7 +39,6 @@ import com.stripe.Stripe;
 import com.stripe.exception.StripeException;
 import com.stripe.model.BalanceTransaction;
 import com.stripe.model.Charge;
-import com.stripe.model.ChargeCollection;
 import com.stripe.model.Customer;
 import com.stripe.model.Invoice;
 import com.stripe.model.InvoiceCollection;
@@ -48,7 +47,6 @@ import com.stripe.model.PaymentMethod;
 import com.stripe.model.PaymentMethodCollection;
 import com.stripe.model.Plan;
 import com.stripe.model.Refund;
-import com.stripe.model.RefundCollection;
 import com.stripe.model.Subscription;
 import com.stripe.model.SubscriptionCollection;
 import com.stripe.model.checkout.Session;
@@ -246,7 +244,7 @@ public class StripeUtil {
 		// 返却
 		return getInvoicesByCustomer(null, start_date, end_date);
 	}
-	public ChargeCollection getCharges(java.util.Date start_date, java.util.Date end_date, String last_ch) throws StripeException {
+	public Iterable<Charge> getCharges(java.util.Date start_date, java.util.Date end_date, String last_ch) throws StripeException {
 		// 返却
 		return getChargesByCustomer(null, start_date, end_date, last_ch);
 	}
@@ -282,7 +280,7 @@ public class StripeUtil {
 	/**
 	 * 顧客に紐づく支払い情報リスト取得
 	 */
-	public ChargeCollection getChargesByCustomer(String customer_id, java.util.Date start_date, java.util.Date end_date, String last_ch) throws StripeException {
+	public Iterable<Charge> getChargesByCustomer(String customer_id, java.util.Date start_date, java.util.Date end_date, String last_ch) throws StripeException {
 		
 		// STRIPE キー設定
 		Stripe.apiKey = Const.STRIPE_API_KEY;
@@ -304,7 +302,7 @@ public class StripeUtil {
 		ChargeListParams params = builder.build();
 		
 		// 支払い情報リスト取得
-		ChargeCollection charges = Charge.list(params);
+		Iterable<Charge> charges = Charge.list(params).autoPagingIterable();
 		// 返却
 		return charges;
 	}
@@ -322,7 +320,7 @@ public class StripeUtil {
 	/**
 	 * 返金情報リスト取得
 	 */
-	public RefundCollection getRefunds(java.util.Date start_date, java.util.Date end_date, String last_re) throws StripeException {
+	public Iterable<Refund> getRefunds(java.util.Date start_date, java.util.Date end_date, String last_re) throws StripeException {
 
 		// STRIPE キー設定
 		Stripe.apiKey = Const.STRIPE_API_KEY;
@@ -340,7 +338,7 @@ public class StripeUtil {
 		if(!CommonUtil.isEmpty(last_re)) builder.setStartingAfter(last_re);
 		RefundListParams params = builder.build();
 		// 支払い情報リスト取得
-		RefundCollection refunds = Refund.list(params);
+		Iterable<Refund> refunds = Refund.list(params).autoPagingIterable();
 		
 		// 返却
 		return refunds;
