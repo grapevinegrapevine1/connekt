@@ -50,19 +50,19 @@
 			</label>
 			
 			<label class="inpt">メールアドレス
-				<input type="email" th:field="*{email}" required th:readonly="not ${is_create}">
+				<input type="email" th:field="*{email}" maxLength="255" required th:readonly="not ${is_create}">
 			</label>
 			
 			<label class="inpt">氏名
-				<input type="text" th:field="*{name}" required/>
+				<input type="text" th:field="*{name}" maxLength="35" required/>
 			</label>
 			
 			<label class="inpt">パスワード(変更する場合は入力、変更しない場合は未入力で保存して下さい)
-				<input id="pw" type="password" th:field="*{password}" th:required="${is_create}" />
+				<input id="pw" type="password" th:field="*{password}" maxLength="255" th:required="${is_create}" />
 			</label>
 			
 			<label class="inpt">パスワード(確認用)
-				<input id="pw_temp" type="password" th:field="*{password_temp}" th:required="${is_create}" />
+				<input id="pw_temp" type="password" th:field="*{password_temp}" maxLength="255" th:required="${is_create}" />
 			</label>
 			
 			<input type="hidden" th:field="*{status}">

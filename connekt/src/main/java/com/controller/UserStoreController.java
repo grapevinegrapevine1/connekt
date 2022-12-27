@@ -1,7 +1,6 @@
 package com.controller;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -37,7 +36,7 @@ import com.service.User_optionService;
 import com.service.User_option_countService;
 import com.service.User_planService;
 import com.service.User_plan_countService;
-import com.stripe.exception.StripeException;
+import com.stripe.model.PaymentMethodCollection;
 import com.stripe.model.Subscription;
 import com.util.CommonUtil;
 import com.util.StripeUtil;
@@ -136,12 +135,10 @@ public class UserStoreController extends BaseUserController{
 	 */
 	@TransactionTokenCheck(type = TransactionTokenType.BEGIN)
 	@RequestMapping("/disp_search_store_nonAppUser")
-	public String disp_checkouted(@RequestParam(name="name", required=true) String name,
-								  @RequestParam(name="tel", required=true) String tel,
-								  @RequestParam(name="birth", required=true) long birth_long, Model model, HttpServletRequest req, HttpSession ses) throws Exception {
+	public String disp_checkouted(@RequestParam(name="user_id", required=true) int user_id, Model model, HttpServletRequest req, HttpSession ses) throws Exception {
 		
 		// ユーザー
-		User user = userService.findNonAppUser(name, tel, new Date(birth_long));
+		User user = userService.find(user_id);
 		// 画面表示
 		return dispSearchStoreNonAppUser(user, false, model, req, ses);
 	}	
@@ -150,7 +147,7 @@ public class UserStoreController extends BaseUserController{
 	 */
 	@TransactionTokenCheck(type = TransactionTokenType.BEGIN)
 	@RequestMapping("/disp_search_store_nonAppUser_checkouted")
-	public String disp_checkouted(@RequestParam(name="user_id", required=true) int user_id, Model model, HttpServletRequest req, HttpSession ses) throws Exception {
+	public String disp_updated(@RequestParam(name="user_id", required=true) int user_id, Model model, HttpServletRequest req, HttpSession ses) throws Exception {
 		
 		// ユーザー
 		User user = userService.find(user_id);
@@ -291,10 +288,12 @@ public class UserStoreController extends BaseUserController{
 	public String checkout(@ModelAttribute @Validated User_storeForm user_storeForm, BindingResult bindingResult,
 							@RequestParam(name="from_store", required=true) boolean from_store,
 							Model model, HttpServletRequest req, HttpSession ses) throws Exception {
-
-		// セッションユーザーチェック
-		String sesErrFoward = CommonUtil.isSesUser(ses);
-		if(sesErrFoward != null) return sesErrFoward;
+		// 店舗からの遷移でない場合
+		if(!from_store) {
+			// セッションユーザーチェック
+			String sesErrFoward = CommonUtil.isSesUser(ses);
+			if(sesErrFoward != null) return sesErrFoward;
+		}
 		
 		// Validationエラーメッセージ取得
 		String validMsg = CommonUtil.isValid(bindingResult,req);
@@ -306,16 +305,10 @@ public class UserStoreController extends BaseUserController{
 		
 		// セッション店舗IDと画面IDが異なる場合
 		if(sesStore_id != user_storeForm.getStore_id()) {
-			
 			// エラーメッセージ
-			List<String> error_messages = new ArrayList<String>();
-			// エラーメッセージ
-			error_messages.add("別のウインドウで店舗の観覧または保存が行われたため、この画面では保存を行うことはできません。再度店舗一覧画面からアクセスしなおして下さい。");
-			// リクエスト
-			req.setAttribute(Const.MSG_ERROR, error_messages);
-			
+			CommonUtil.setMessage("別のウインドウで店舗の観覧または保存が行われたため、保存することができませんでした。再度対象の店舗へアクセスいただき保存を実行してください。",req);
 			// 遷移
-			return Const.PAGE_USER_STORE;
+			return disp(sesStore_id, model, req, ses);
 			
 		// 正常である場合
 		}else {
@@ -332,8 +325,44 @@ public class UserStoreController extends BaseUserController{
 			
 		/* プラン */
 			
-			// チェックアウト対象プラン情報取得
-			Plan plan = chkUpdatePlan(user_storeForm, sesStore_id, user.getId());
+			// プラン情報
+			Plan _plan = planService.find(user_storeForm.getUser_plan().getPlan_id());
+			// 更新対象プラン情報
+			Plan plan = null;
+			// 変更前のプラン
+			User_plan user_plan = user_planService.contain(sesStore_id, user.getId());
+			
+			// プランが存在する場合
+			if(_plan != null) {
+				
+				// 更新実行フラグ
+				boolean updatingPlan = false;
+				// 変更前のプランが存在しない場合
+				if(user_plan== null) {
+					// プランの新規登録のためチェックアウト
+					plan = _plan;
+					updatingPlan = true;
+				// プランが変更されている場合
+				}else if(_plan.getId() != user_plan.getPlan_id()) {
+					// 変更前のサブスクキャンセル
+					stripeUtil.cancelPlanSubscription(user_plan);
+					// プラン変更のためチェックアウト
+					plan = _plan;
+					updatingPlan = true;
+				}
+				
+				// プランが既に削除されている場合
+				if(updatingPlan && plan == null && 0 < user_storeForm.getUser_plan().getPlan_id()) {
+					// エラーメッセージ
+					CommonUtil.setMessage("選択されたプランは削除されているため保存することができませんでした。", req);
+					// 遷移
+					return disp(sesStore_id, model, req, ses);
+				}
+			// プランが存在しない場合
+			}else {
+				// プランが登録されている場合はサブスクキャンセル
+				if(user_plan != null) stripeUtil.cancelPlanSubscription(user_plan);
+			}
 			
 		/* オプション */
 			
@@ -355,6 +384,14 @@ public class UserStoreController extends BaseUserController{
 					if(!exist) {
 						// オプション情報
 						Option option = optionService.find(option_id);
+						// オプションが存在しない場合
+						if(0 < option_id && option == null) {
+							// エラーメッセージ
+							CommonUtil.setMessage("選択されたオプションは削除されているため保存することができませんでした。",req);
+							// 遷移
+							return disp(sesStore_id, model, req, ses);
+						}
+						
 						// リスト追加
 						options.add(option);
 					}
@@ -375,50 +412,28 @@ public class UserStoreController extends BaseUserController{
 			
 		/* データ更新 */
 			
-			// プランまたはオプションが選択されている場合
-			if(plan != null || 0 < options.size()) {
-				// サブスク登録
-				stripeUtil.setSubscription(sesStore_id, user.getId(), user.getStripe_customer_id(), plan, options);
+			// プランまたはオプションが選択されている(更新対象プランが存在する)場合
+			if(plan != null || 0 < options.size() ) {
+				
+				// 支払情報
+				PaymentMethodCollection paymentMethods = stripeUtil.getPaymentMethods(user.getStripe_customer_id());
+				// 支払情報が存在しない場合
+				if(0 == paymentMethods.getData().size()) {
+					// エラーメッセージ
+					CommonUtil.setMessage("決済情報が設定されていないため、契約を登録することができませんでした。トップ画面の決済情報設定から決済情報を設定してください。", req);
+					// 遷移
+					return disp(sesStore_id, model, req, ses);
+					
+				// 支払情報が存在する場合
+				}else {
+					// サブスク登録
+					stripeUtil.setSubscription(sesStore_id, user.getId(), user.getStripe_customer_id(), plan, options, paymentMethods);
+				}
 			}
 			
 			// 遷移
 			return updatedForward(from_store, user_storeForm.getStore_id(), user.getId(), -1);
 		}
-	}
-	
-	/**
-	 * サブスク契約対象プラン情報取得
-	 */
-	private Plan chkUpdatePlan(User_storeForm user_storeForm, int store_id, int user_id) throws StripeException {
-
-		// プラン情報
-		Plan plan = planService.find(user_storeForm.getUser_plan().getPlan_id());
-		// 更新対象プラン情報
-		Plan updatePlan = null;
-		// 変更前のプラン
-		User_plan user_plan = user_planService.contain(store_id, user_id);
-		
-		// プランが存在する場合
-		if(plan != null) {
-			
-			// 変更前のプランが存在しない場合は、プランの新規登録のためチェックアウト
-			if(user_plan== null) updatePlan = plan;
-			// プランが変更されている場合
-			else if(plan.getId() != user_plan.getPlan_id()) {
-				// 変更前のサブスクキャンセル
-				stripeUtil.cancelPlanSubscription(user_plan);
-				// プラン変更のためチェックアウト
-				updatePlan = plan;
-			}
-			
-		// プランが存在しない場合
-		}else {
-			// プランが登録されている場合はサブスクキャンセル
-			if(user_plan != null) stripeUtil.cancelPlanSubscription(user_plan);;
-		}
-		
-		// 返却
-		return updatePlan;
 	}
 	
 /* 次回更新の停止・再開 */
@@ -456,7 +471,7 @@ public class UserStoreController extends BaseUserController{
 		if(sesErrFoward != null) return sesErrFoward;
 		
 		// 返金
-		return setStopOrRestartSubscription(isPlan, from_store, store_id, relation_id, store_id, user_id, model, req, ses);
+		return setStopOrRestartSubscription(isPlan, from_store, Const.PLAN_UPDATE_TYPE_REFUND, relation_id, store_id, user_id, model, req, ses);
 	}
 	
 	/**
@@ -500,7 +515,7 @@ public class UserStoreController extends BaseUserController{
 				req.setAttribute(Const.MSG_ERROR, error_messages);
 				
 				// ユーザー店舗画面 or プラン選択画面へ遷移
-				return !from_store ? Const.PAGE_USER_STORE : storeRequestController.reqNonAppUser(user.getId(), model, req, ses);
+				return !from_store ? disp(store_id, model, req, ses) : storeRequestController.reqNonAppUser(user.getId(), model, req, ses);
 			}
 		}
 		
@@ -580,12 +595,12 @@ public class UserStoreController extends BaseUserController{
 			// エラーメッセージ
 			List<String> error_messages = new ArrayList<String>();
 			// エラーメッセージ
-			error_messages.add("別のウインドウで店舗の観覧または保存が行われたため、この画面では保存を行うことはできません。再度店舗一覧画面からアクセスしなおして下さい。");
+			error_messages.add("別のウインドウで店舗の観覧または保存が行われたため、保存することができませんでした。再度対象の店舗へアクセスいただき保存を実行してください。");
 			// リクエスト
 			req.setAttribute(Const.MSG_ERROR, error_messages);
 			
 			// ユーザー店舗画面遷移
-			return new ChkValidResult(Const.PAGE_USER_STORE);
+			return new ChkValidResult(disp(sesStore_id, model, req, ses));
 			
 		// 正常である場合
 		}else {
@@ -634,7 +649,7 @@ public class UserStoreController extends BaseUserController{
 				req.setAttribute(Const.MSG_ERROR, error_messages);
 				
 				// ユーザー店舗画面 or 読取画面遷移
-				return new ChkValidResult(!from_store ? Const.PAGE_USER_STORE : new StoreReadController().disp(model, req, ses));
+				return new ChkValidResult(!from_store ? disp(sesStore_id, model, req, ses) : new StoreReadController().disp(model, req, ses));
 			}
 			
 			// エラーなし

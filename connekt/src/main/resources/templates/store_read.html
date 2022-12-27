@@ -69,15 +69,15 @@
 			<label class="inpt">
 				顧客の氏名(保険証や免許証と同じ氏名をご入力下さい)
 				<span class="sub_label">苗字</span>
-				<input type="text" placeholder="苗字" class="inptTrim" onchange="trimInpt(this);" th:field="*{first_name}" required/>
+				<input type="text" placeholder="苗字" class="inptTrim" maxLength="100" onchange="trimInpt(this);" th:field="*{first_name}" required/>
 				
 				<span class="sub_label">名前</span>
-				<input type="text" placeholder="名前" class="inptTrim" onchange="trimInpt(this);" th:field="*{last_name}" required/>
+				<input type="text" placeholder="名前" class="inptTrim" maxLength="100" onchange="trimInpt(this);" th:field="*{last_name}" required/>
 			</label>
 			
 			<label class="inpt">
 				顧客の電話番号(ハイフン不要)
-				<input type="tel"onchange="removeBar(this);" class="inptTrim" placeholder="ハイフン無しの電話番号を入力してください" th:field="*{tel}" required/>
+				<input type="tel"onchange="removeBar(this);" class="inptTrim" maxLength="30" placeholder="ハイフン無しの電話番号を入力してください" th:field="*{tel}" required/>
 			</label>
 			
 			<label class="inpt">

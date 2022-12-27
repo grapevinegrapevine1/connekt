@@ -26,12 +26,12 @@
 		<form method="post" th:action="${is_user eq true} ? @{/user_recert} : @{/store_recert}" th:object="${forgetForm}">
 			
 			<label class="inpt">メールアドレス
-				<input type="email" th:field="*{email}" required>
+				<input type="email" maxLength="255" th:field="*{email}" required>
 			</label>
 			
 			<label class="inpt">
 				<span th:text="${is_user eq true} ? '氏名' : '店舗名'"></span>
-				<input type="text" th:field="*{name}" required/>
+				<input type="text" maxLength="35" th:field="*{name}" required/>
 			</label>
 			
 			<p>送信ボタンを押すと、入力されたメールアドレス宛にメールが送信されます。</p>

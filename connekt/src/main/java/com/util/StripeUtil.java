@@ -5,10 +5,14 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
@@ -41,7 +45,6 @@ import com.stripe.model.BalanceTransaction;
 import com.stripe.model.Charge;
 import com.stripe.model.Customer;
 import com.stripe.model.Invoice;
-import com.stripe.model.InvoiceCollection;
 import com.stripe.model.PaymentIntent;
 import com.stripe.model.PaymentMethod;
 import com.stripe.model.PaymentMethodCollection;
@@ -50,9 +53,7 @@ import com.stripe.model.Refund;
 import com.stripe.model.Subscription;
 import com.stripe.model.SubscriptionCollection;
 import com.stripe.model.checkout.Session;
-import com.stripe.param.ChargeListParams;
-import com.stripe.param.InvoiceListParams;
-import com.stripe.param.InvoiceListParams.Created;
+import com.stripe.param.InvoiceSearchParams;
 import com.stripe.param.PaymentIntentConfirmParams;
 import com.stripe.param.RefundCreateParams;
 import com.stripe.param.RefundListParams;
@@ -60,6 +61,7 @@ import com.stripe.param.SubscriptionCreateParams;
 import com.stripe.param.SubscriptionCreateParams.PaymentBehavior;
 import com.stripe.param.SubscriptionListParams;
 import com.stripe.param.SubscriptionRetrieveParams;
+import com.stripe.param.SubscriptionSearchParams;
 import com.stripe.param.checkout.SessionCreateParams;
 import com.stripe.param.checkout.SessionCreateParams.Builder;
 import com.stripe.param.checkout.SessionCreateParams.Mode;
@@ -188,13 +190,10 @@ public class StripeUtil {
 	 * https://stripe.com/docs/billing/subscriptions/build-subscriptions?ui=elements
 	 * @throws Exception 
 	 */
-	public void setSubscription(int store_id, int user_id, String stripe_customer_id, com.model.Plan planModel, List<Option> options) throws Exception {
+	public void setSubscription(int store_id, int user_id, String stripe_customer_id, com.model.Plan planModel, List<Option> options, PaymentMethodCollection paymentMethods) throws Exception {
 
 		// STRIPE キー設定
 		Stripe.apiKey = Const.STRIPE_API_KEY;
-		
-		// 支払情報
-		PaymentMethodCollection paymentMethods = getPaymentMethods(stripe_customer_id);
 		
 		// プラン情報が存在する場合
 		if(planModel != null) {
@@ -205,7 +204,6 @@ public class StripeUtil {
 			Subscription subscription = Subscription.create(subCreateParams);
 			// 利用数情報更新
 			updatePlanCount(user_id, planModel.getStripe_plan_id(), subscription);
-			
 		}
 		
 		// オプション情報が存在する場合
@@ -238,75 +236,96 @@ public class StripeUtil {
 //	}
 	
 	/**
-	 * 支払い情報リスト取得
-	 */
-	public InvoiceCollection getInvoices(java.util.Date start_date, java.util.Date end_date) throws StripeException {
-		// 返却
-		return getInvoicesByCustomer(null, start_date, end_date);
-	}
-	public Iterable<Charge> getCharges(java.util.Date start_date, java.util.Date end_date, String last_ch) throws StripeException {
-		// 返却
-		return getChargesByCustomer(null, start_date, end_date, last_ch);
-	}
-	/**
 	 * 顧客に紐づく支払い情報リスト取得
 	 */
-	public InvoiceCollection getInvoicesByCustomer(String customer_id, java.util.Date start_date, java.util.Date end_date) throws StripeException {
+	public Iterable<Invoice> searchInvoicesByStore(int store_id, java.util.Date start_date, java.util.Date end_date) throws StripeException {
+		return searchInvoice(store_id, -1, start_date, end_date);
+	}
+	public Iterable<Invoice> searchInvoiceByUser(int user_id, java.util.Date start_date, java.util.Date end_date) throws StripeException {
+		return searchInvoice(-1, user_id, start_date, end_date);
+	}
+	private Iterable<Invoice> searchInvoice(int store_id, int user_id, java.util.Date start_date, java.util.Date end_date) throws StripeException {
 		
 		// STRIPE キー設定
 		Stripe.apiKey = Const.STRIPE_API_KEY;
 		
-		// 対象期間
-		Created created = Created.builder()
-					.setGte(CommonUtil.getUnixToTime(start_date))
-					.setLte(CommonUtil.getUnixToTime(end_date))
-					.build();
-		// パラメータ設定
-		com.stripe.param.InvoiceListParams.Builder builder = InvoiceListParams.builder();
-		builder.setCreated(created)
-				.setLimit((long) 100)
-				.addExpand("data.subscription")
-				.addExpand("data.payment_intent.charges.data");
-		if(!CommonUtil.isEmpty(customer_id)) builder.setCustomer(customer_id);
-		InvoiceListParams params = builder.build();
+	/* Chargeから取得 */
 		
-		// 支払い情報リスト取得
-		InvoiceCollection invoices = Invoice.list(params);
+//		// 対象期間
+//		com.stripe.param.ChargeListParams.Created created = com.stripe.param.ChargeListParams.Created.builder()
+//					.setGte(CommonUtil.getUnixToTime(start_date))
+//					.setLte(CommonUtil.getUnixToTime(end_date))
+//					.build();
+//		// パラメータ設定
+//		com.stripe.param.ChargeListParams.Builder builder = ChargeListParams.builder();
+//		builder.setCreated(created)
+//				.setLimit((long) Const.MAX_SALES_COUNT)
+//				.addExpand("data.balance_transaction")
+//				.addExpand("data.payment_intent")
+//				.addExpand("data.invoice.subscription");
+//		if(!CommonUtil.isEmpty(customer_id)) builder.setCustomer(customer_id);
+//		ChargeListParams params = builder.build();
+//		
+//		// 支払い情報リスト取得
+//		Iterable<Charge> charges = Charge.list(params).autoPagingIterable();
+		
+	/* Subscription取得 */
+		
+		// 店舗/ユーザーに紐づくSubscriptionを全て取得
+		com.stripe.param.SubscriptionSearchParams.Builder builder= SubscriptionSearchParams.builder();
+//		builder.setQuery("metadata['store_id']:'6'");
+		if(0 < store_id) builder.setQuery("metadata['store_id']:'"+ store_id +"'");
+		else builder.setQuery("metadata['user_id']:'"+ user_id +"'");
+		
+		// パラメータ生成
+		SubscriptionSearchParams sbParams = builder.build();
+		// Subscription取得
+		Iterable<Subscription> _subscriptions = Subscription.search(sbParams).autoPagingIterable();
+		Stream<Subscription> subscriptions = iterableToStream(_subscriptions);
+		// 検索期間
+		long st = CommonUtil.getUnixToTime(start_date), ed = CommonUtil.getUnixToTime(end_date);
+		List<Invoice> invoices = new CopyOnWriteArrayList<Invoice>();
+		// 対象インボイスを格納
+		subscriptions.parallel().forEach(sb->addInvoice(invoices, sb, st, ed));
+		// 作成順ソート
+		invoices.stream().sorted(Comparator.comparing(Invoice::getCreated)).collect(Collectors.toList());
+		
+		// テスト出力
+//		String a = "";
+//		for(Invoice invoice : invoices){
+//			a += invoice.getSubscriptionObject().getMetadata().get("store_id") + ":" +invoice.getId() + "\n";
+//		}
+//		System.out.println(a);
 		
 		// 返却
 		return invoices;
 	}
 	
-	/**
-	 * 顧客に紐づく支払い情報リスト取得
-	 */
-	public Iterable<Charge> getChargesByCustomer(String customer_id, java.util.Date start_date, java.util.Date end_date, String last_ch) throws StripeException {
-		
-		// STRIPE キー設定
-		Stripe.apiKey = Const.STRIPE_API_KEY;
-		
-		// 対象期間
-		com.stripe.param.ChargeListParams.Created created = com.stripe.param.ChargeListParams.Created.builder()
-					.setGte(CommonUtil.getUnixToTime(start_date))
-					.setLte(CommonUtil.getUnixToTime(end_date))
-					.build();
-		// パラメータ設定
-		com.stripe.param.ChargeListParams.Builder builder = ChargeListParams.builder();
-		builder.setCreated(created)
+	private void addInvoice(List<Invoice> invoices, Subscription sb, long st, long ed){
+
+		// パラメータ
+		InvoiceSearchParams inParam = InvoiceSearchParams.builder()
+				.setQuery("subscription:'"+sb.getId()+"' and created>="+st+" and created<="+ed)
 				.setLimit((long) Const.MAX_SALES_COUNT)
-				.addExpand("data.balance_transaction")
 				.addExpand("data.payment_intent")
-				.addExpand("data.invoice.subscription");
-		if(!CommonUtil.isEmpty(customer_id)) builder.setCustomer(customer_id);
-		if(!CommonUtil.isEmpty(last_ch)) builder.setStartingAfter(last_ch);
-		ChargeListParams params = builder.build();
+				.addExpand("data.charge.balance_transaction")
+				.build();
+		// Invoice取得
+		Stream<Invoice> stream = null;
+		try {
+			stream = iterableToStream(Invoice.search(inParam).autoPagingIterable());
+		} catch (StripeException e) {
+			e.printStackTrace();
+		}
 		
-		// 支払い情報リスト取得
-		Iterable<Charge> charges = Charge.list(params).autoPagingIterable();
-		// 返却
-		return charges;
+		// リスト追加(サブスク情報設定)
+		invoices.addAll(stream.peek(i->i.setSubscriptionObject(sb)).collect(Collectors.toList()));
 	}
-	
+	// IterableをStreamに変換する一般的なメソッド
+	public static <T> Stream<T> iterableToStream(Iterable<T> iterable) {
+		// Iterableからspliteratorを取得し、それをシーケンシャルストリームに変換します
+		return StreamSupport.stream(iterable.spliterator(), false);
+	}
 	/**
 	 * 手数料の設定
 	 */
@@ -320,7 +339,7 @@ public class StripeUtil {
 	/**
 	 * 返金情報リスト取得
 	 */
-	public Iterable<Refund> getRefunds(java.util.Date start_date, java.util.Date end_date, String last_re) throws StripeException {
+	public Iterable<Refund> getRefunds(java.util.Date start_date, java.util.Date end_date) throws StripeException {
 
 		// STRIPE キー設定
 		Stripe.apiKey = Const.STRIPE_API_KEY;
@@ -334,8 +353,7 @@ public class StripeUtil {
 		com.stripe.param.RefundListParams.Builder builder = RefundListParams.builder()
 					.setLimit((long) Const.MAX_SALES_COUNT)
 					.setCreated(created)
-					.addExpand("data.payment_intent.invoice.subscription");;
-		if(!CommonUtil.isEmpty(last_re)) builder.setStartingAfter(last_re);
+					.addExpand("data.payment_intent.invoice.subscription");
 		RefundListParams params = builder.build();
 		// 支払い情報リスト取得
 		Iterable<Refund> refunds = Refund.list(params).autoPagingIterable();
@@ -545,7 +563,7 @@ public class StripeUtil {
 				}
 				
 				// 店名
-				String storeNm = storeService.find(user_relation.getStore_id()).getName();
+				String storeNm = storeService.find(user_relation.getStore_id()).getStore_name();
 				// エラーメッセージ
 				errMsg = "店舗:" + storeNm + " - 契約:" + planNm + "の決済エラーにより契約が完了していません。";
 			}

@@ -7,8 +7,10 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.Transient;
+import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.PositiveOrZero;
+import javax.validation.constraints.Size;
 
 @Entity
 @Table(name = "user")
@@ -18,9 +20,13 @@ public class User {
 	@GeneratedValue
 	private int id;
 	@NotBlank
+	@Email
+	@Size(max=255)
 	private String email;
 	@NotBlank
+	@Size(max=35)
 	private String name;
+	@Size(max=255)
 	private String password;
 	private String stripe_customer_id;
 	private String tel;
@@ -30,6 +36,7 @@ public class User {
 	private int status;
 	
 	@Transient
+	@Size(max=255)
 	private String password_temp;
 	
 	/*

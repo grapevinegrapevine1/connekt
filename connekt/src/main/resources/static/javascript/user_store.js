@@ -60,6 +60,11 @@ function selectModalPlan(){
 	$radio.prop("checked", true);
 }
 
+// 保存時確認ダイアログ
+function confSave(){
+	return window.confirm("保存してよろしいですか？\n※プランを変更する際に、解除されたプランは利用停止されますが利用期間が残っている場合も返金は行われません。\n");
+}
+
 // 停止ボタンサブミット
 function submitStopBtn(relation_id, is_plan, is_stop){
 	
@@ -82,5 +87,5 @@ function confirmStop(){
 
 // 返品前の確認
 function confirmRefund(){
-	return window.confirm("このプランを返品してもよろしいですか？\n手数料3.6%を除いた全ての金額が返金されます。");
+	return window.confirm("このプランを返品してもよろしいですか？\n手数料を除いた全ての金額が返金されます。");
 }

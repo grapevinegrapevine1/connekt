@@ -36,6 +36,11 @@ public class User_relationService<T> {
 		CommonSpecification<T> spec = new CommonSpecification<>();
 		return jpaSpecificationExecutor.findAll(spec.equal("store_id", store_id).and(spec.equal("user_id", user_id)));
 	}
+
+	public List<T> containByStoreIdAndPlanId(String col, int store_id, int plan_id) {
+		CommonSpecification<T> spec = new CommonSpecification<>();
+		return jpaSpecificationExecutor.findAll(spec.equal("store_id", store_id).and(spec.equal(col + "_id", plan_id)));
+	}
 	
 	public List<T> containByStoreId(int store_id) {
 		CommonSpecification<T> spec = new CommonSpecification<>();

@@ -8,19 +8,49 @@ $(function() {
 	if(isSmartPhone()) $preview.hide();
 	else $preview.show();
 	
+	// サブミットボタンのクリックイベント
+	$("button[type='submit'],input[type='submit']").click(function(e) {
+		// Ctrl + Clickである場合
+		if (e.ctrlKey) {
+			// イベント中断
+			e.preventDefault();
+		}
+	});
+	
 	// サブミット時ローディング表示イベント設定
 	$("form").each(function(index, elm) {
 		let $fm = $(elm);
 		if($fm.prop("target") != "_blank") $fm.attr("onSubmit", $fm.attr("onSubmit") + ";dispLoading();");
 	});
+	
+	// 数値入力欄の最大、最小チェック
+	$("input[type='number'][max!='']").on('input', function() {
+		validNumberMax(this, $(this).prop("max"));
+	});
+	$("input[type='number'][min!='']").on('input', function() {
+		validNumberMin(this, $(this).prop("min"));
+	});
 });
+
+// 数値入力欄の最大桁数制御
+function sliceMaxLength(elem, maxLength) {
+	elem.value = elem.value.slice(0, maxLength);
+}
+// 数値入力欄の最小値制御
+function validNumberMin(elem, min) {
+	if(parseInt(elem.value) < parseInt(min)) elem.value = min;
+}
+// 数値入力欄の最大値制御
+function validNumberMax(elem, max) {
+	if(parseInt(max) < parseInt(elem.value)) elem.value = max;
+}
 
 // ローディング表示
 function dispLoading(){
 	
 	// ローディング要素生成
-	let $loading = $("<div>",{"id":"loading"});
-	let $spinnerBox = $("<div>",{"class":"spinner-box"});
+	let $loading = $("<div>", { "id": "loading" });
+	let $spinnerBox = $("<div>", { "class": "spinner-box" });
 	$loading.append($spinnerBox);
 	$spinnerBox.append($("<div>",{"class":"blue-orbit leo"}));
 	$spinnerBox.append($("<div>",{"class":"green-orbit leo"}));
@@ -262,6 +292,19 @@ function isSmartPhone() {
 	return navigator.userAgent.match(/(iPhone|iPad|iPod|Android)/i);
 }
 
+
+/**
+ 出力確認
+ */
+function confExport(){
+	
+	if(isEmpty($("#_start_date_str").val())){
+		alert("「請求期間選択」の開始日を入力してください");
+		return false;
+	}else{
+		return window.confirm("請求書は「請求期間選択」の開始日で選択された月の請求を出力します。\nまた、出力処理に時間がかかる場合があります\n請求書の出力を実行してもよろしいでしょうか？");
+	}
+}
 /* ------------------------------------------------------------------------------------ */
 
 /**

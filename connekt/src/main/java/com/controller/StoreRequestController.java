@@ -218,7 +218,7 @@ public class StoreRequestController extends BaseStoreController{
 			user = userService.save(user);
 
 			// カード登録画面へ遷移
-			return stripeUtil.createCard_nonAppUser(req, customerId, getUserStoreUrl(name, store_readForm.getTel(), store_readForm.getBirth()) );
+			return stripeUtil.createCard_nonAppUser(req, customerId, getUserStoreUrl(user.getId()) );
 			
 		// ユーザーが存在する場合
 		}else {
@@ -232,7 +232,7 @@ public class StoreRequestController extends BaseStoreController{
 			if(0 == paymentMethods.getData().size()) {
 				
 				// カード登録画面へ遷移
-				return stripeUtil.createCard_nonAppUser(req, stripe_customer_id, getUserStoreUrl(name, store_readForm.getTel(), store_readForm.getBirth()) );
+				return stripeUtil.createCard_nonAppUser(req, stripe_customer_id, getUserStoreUrl(user.getId()) );
 				
 			// 支払情報が存在する(正常である)場合
 			}else {
@@ -249,7 +249,7 @@ public class StoreRequestController extends BaseStoreController{
 				if((user_plan == null && 0 == user_options.size()) ||!store_readForm.getIs_plan_count()) {
 					
 					// プラン選択画面
-					return Const.REDIRECT_HEADER + getUserStoreUrl(name, store_readForm.getTel(), store_readForm.getBirth());
+					return Const.REDIRECT_HEADER + getUserStoreUrl(user.getId());
 					
 				// ユーザープランまたはオプションが存在する場合
 				}else {
@@ -301,8 +301,8 @@ public class StoreRequestController extends BaseStoreController{
 	/**
 	 * ユーザープラン選択画面URL取得
 	 */
-	private static String getUserStoreUrl(String name, String tel, Date birth) {
-		return "/disp_search_store_nonAppUser?name=" + name + "&tel=" + tel + "&birth=" + birth.getTime();
+	private static String getUserStoreUrl(int user_id) {
+		return "/disp_search_store_nonAppUser?user_id=" + user_id;
 	}
 	
 	/**
@@ -405,6 +405,8 @@ public class StoreRequestController extends BaseStoreController{
 		User_relation user_relation = isPlan
 				? user_planService.containByPlanId(store.getId(), user_id, plan_id)
 				: user_optionService.containByPlanId(store.getId(), user_id, plan_id);
+		// プラン/オプションが存在しない場合
+		if(user_relation == null) return errDisp("既に契約が解除されているため手続きを行うことができませんでした。", user_id, model, req, ses);
 		
 		// 決済エラー可否(true:エラー)
 		boolean errUsrPay = stripeUtil.chkErrPaymentIntent(stripeUtil.getSubscription(user_relation.getStripe_subscription_id()));

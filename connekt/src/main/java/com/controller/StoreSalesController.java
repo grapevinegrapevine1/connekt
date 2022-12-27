@@ -45,7 +45,7 @@ public class StoreSalesController{
 		
 		// セッション店舗情報
 		Store store = CommonUtil.getSessionStore(ses);
-		return salesController.disp(model, req, ses, isStore, store.getName(), store.getId());
+		return salesController.disp(model, req, ses, isStore, store.getId());
 	}
 	
 	/**
@@ -60,7 +60,7 @@ public class StoreSalesController{
 		
 		// セッション店舗情報
 		Store store = CommonUtil.getSessionStore(ses);
-		return salesController.disp(storeSalesForm, bindingResult, model, req, ses, isStore, store.getName(), store.getId());
+		return salesController.disp(storeSalesForm, bindingResult, model, req, ses, isStore, store.getId());
 	}
 	
 	/**

@@ -176,7 +176,7 @@ public class StoreCreateController extends BaseStoreController{
 		Store sesStore = CommonUtil.getSessionStore(ses);
 
 		// (テストコード)割引用IDが存在しない場合は生成
-		//if(sesStore.getDiscount_id() == null || sesStore.getDiscount_id().equals("")) store.setDiscount_id(getDiscountIdEnc(store.getId(),store.getName()));
+		//if(sesStore.getDiscount_id() == null || sesStore.getDiscount_id().equals("")) store.setDiscount_id(getDiscountIdEnc(store.getId(),store.getStore_name()));
 		
 		// エラーメッセージ
 		List<String> error_messages = new ArrayList<String>();
@@ -458,13 +458,13 @@ public class StoreCreateController extends BaseStoreController{
 		// 返金が存在する場合
 		if(0 != refundAmount) {
 			// ニュース登録
-			int news_id = newsUtil.saveNew_removeStore(isPlan, store.getId(), store.getName(), planNm, refundAmount);
+			int news_id = newsUtil.saveNew_removeStore(isPlan, store.getId(), store.getStore_name(), planNm, refundAmount);
 			// ニュースユーザー登録
 			newsUtil.saveNews_user(user_relation.getUser_id(), news_id);
 			
 			// メール通知
 			Runnable runnable = () -> {
-				mailUtil.sendNews_deleteStore(user_relation.getUser().getEmail(),store.getName(), planNm, refundAmount, isPlan);
+				mailUtil.sendNews_deleteStore(user_relation.getUser().getEmail(),store.getStore_name(), planNm, refundAmount, isPlan);
 			};
 			runnable.run();
 		}

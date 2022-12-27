@@ -5,14 +5,18 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
 
 public class Store_readForm {
 
 	@NotBlank
+	@Size(max=100)
 	private String first_name;
 	@NotBlank
+	@Size(max=100)
 	private String last_name;
 	@NotBlank
+	@Size(max=30)
 	private String tel;
 	private Date birth;
 	@NotBlank

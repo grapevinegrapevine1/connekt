@@ -73,7 +73,7 @@
 			<label class="inpt">
 				<span>料金(円)</span>
 				<span class="inpt_warning" th:if="*{id} eq 0">※保存後に変更することができない項目です</span>
-				<input type="number" min="0" max="999999"th:field="*{price}" th:readonly="*{id} != 0" required/>
+				<input type="number" min="0" oninput="sliceMaxLength(this, 5)" max="999999"th:field="*{price}" th:readonly="*{id} != 0" required/>
 			</label>
 			
 			<label class="inpt">
@@ -84,7 +84,7 @@
 			<label class="inpt interval">
 				<span>顧客に請求を行う周期</span>
 				<span class="inpt_warning" th:if="*{id} eq 0">※保存後に変更することができない項目です</span>
-				<input type="number" min="1" max="12" id="planInterval" th:field="*{plan_interval}" onchange="setIntervalHead()" th:readonly="*{id} != 0" required/>
+				<input type="number" min="1" max="12" oninput="sliceMaxLength(this, 2)" id="planInterval" th:field="*{plan_interval}" onchange="setIntervalHead()" th:readonly="*{id} != 0" required/>
 				<span class="unit">ヵ月周期</span>
 			</label>
 			
@@ -95,7 +95,7 @@
 				<input type="number" id="interval_head" max="99" disabled/>
 				<span class="unit">ヵ月に</span>
 				
-				<input type="number" min="1" max="99" th:field="*{count}" th:readonly="*{id} != 0" required/>
+				<input type="number" min="1" max="99" oninput="sliceMaxLength(this, 2)" th:field="*{count}" th:readonly="*{id} != 0" required/>
 				<span class="unit">回まで利用可能</span>
 			</label>
 			
@@ -127,17 +127,12 @@
 				<div>
 					<label class="inpt">
 						開始日
-						<input type="date" th:field="*{start_date_str}" onchange="$('#_start_date_str').val(this.value)"/>
+						<input type="date" th:field="*{start_date_str}" onchange="$('#_start_date_str').val(this.value)" required/>
 					</label>
 					<label class="inpt">
 						終了日
-						<input type="date" th:field="*{end_date_str}" onchange="$('#_end_date_str').val(this.value)"/>
+						<input type="date" th:field="*{end_date_str}" onchange="$('#_end_date_str').val(this.value)" required/>
 					</label>
-					
-					<!-- 取得データ最後の支払情報 -->
-					<input type="hidden" th:field="*{last_ch}" />
-					<!-- 取得データ最後の返金情報 -->
-					<input type="hidden" th:field="*{last_re}" />
 				</div>
 				<button type="submit" class="btn">表示</button>
 			</form>
@@ -207,7 +202,7 @@
 				<div class="head_sub">「請求期間選択」の開始日で選択された月の請求を出力</div>
 			</div>
 			
-			<form method="post" th:action="${isStore} ? @{/export_store_sales} : @{/export_user_sales}" th:object="${form}" target="_blank">
+			<form method="post" th:action="${isStore} ? @{/export_store_sales} : @{/export_user_sales}" th:object="${form}" target="_blank" onsubmit="return confExport();">
 				
 				<input type="hidden" id="_start_date_str" th:field="*{start_date_str}"/>
 				<input type="hidden" id="_end_date_str" th:field="*{end_date_str}"/>

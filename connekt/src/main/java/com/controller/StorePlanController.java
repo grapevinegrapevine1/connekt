@@ -46,4 +46,12 @@ public class StorePlanController {
 		// 遷移
 		return Const.PAGE_STORE_PlAN;
 	}
+	
+	@RequestMapping("/store_plan_deletedError")
+	public String dispPlanDeleted(Model model, HttpServletRequest req, HttpSession ses) throws Exception {
+		// エラーメッセージ設定
+		CommonUtil.setMessage("既に削除されているため保存することができませんでした。", req);
+		// 遷移
+		return disp(model, req, ses);
+	}
 }

@@ -275,4 +275,54 @@ public class CommonUtil {
 		// セッションユーザーが存在しない場合はエラー画面遷移
 		return CommonUtil.getSessionStore(ses) != null ? null : Const.REDIRECT_HEADER + Const.PAGE_SESSION_ERROR;
 	}
+	
+	/**
+	 * エラーメッセージ設定
+	 */
+	public static void setMessage(String msg, HttpServletRequest req) {
+		// エラーメッセージ
+		List<String> error_messages = new ArrayList<String>();
+		// エラーメッセージ
+		error_messages.add(msg);
+		// リクエスト
+		req.setAttribute(Const.MSG_ERROR, error_messages);
+	}
+
+	// 月初日を返す
+	public static Date getFirstDate(Date date) {
+
+		if (date == null)
+			return null;
+
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTime(date);
+		int first = calendar.getActualMinimum(Calendar.DATE);
+		calendar.set(Calendar.DATE, first);
+
+		calendar.set(Calendar.HOUR_OF_DAY, 00);
+		calendar.set(Calendar.MINUTE, 00);
+		calendar.set(Calendar.SECOND, 00);
+		calendar.set(Calendar.MILLISECOND, 000);
+
+		return calendar.getTime();
+	}
+
+	// 月末日を返す
+	public static Date getLastDate(Date date) {
+
+		if (date == null)
+			return null;
+
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTime(date);
+		int last = calendar.getActualMaximum(Calendar.DATE);
+		calendar.set(Calendar.DATE, last);
+
+		calendar.set(Calendar.HOUR_OF_DAY, 23);
+		calendar.set(Calendar.MINUTE, 59);
+		calendar.set(Calendar.SECOND, 59);
+		calendar.set(Calendar.MILLISECOND, 999);
+
+		return calendar.getTime();
+	}
 }

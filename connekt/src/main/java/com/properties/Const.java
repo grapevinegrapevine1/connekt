@@ -27,6 +27,8 @@ public class Const {
 	
 	// 請求データ取得件数
 	public static final int MAX_SALES_COUNT = 10;
+	// ログイン時セッション店舗IDキー
+	public static final String LOGIN_STORE_ID = "login_store_id";
 	
 	public static final int USER_STATUS_DEAULT = 0;
 	public static final int USER_STATUS_SET_CARD = 1;
@@ -54,6 +56,7 @@ public class Const {
 	public static final String PAGE_USER_SETTING = "user_setting";
 	public static final String PAGE_USER_LIST = "user_list";
 	public static final String PAGE_USER_STORE = "user_store";
+	public static final String PAGE_USER_STORE_SEARCH = "search_store";
 	public static final String PAGE_USER_SALES = "user_sales";
 	public static final String PAGE_USER_TRANS_ERROR = "user_trans_error";
 	public static final String PAGE_USER_VALID_ERROR = "user_valid_error";
@@ -64,6 +67,7 @@ public class Const {
 	public static final String PAGE_STORE_CREATE = "store_create";
 	public static final String PAGE_STORE_SETTING = "store_setting";
 	public static final String PAGE_STORE_PlAN = "store_plan";
+	public static final String PAGE_STORE_PlAN_DELETED = "store_plan_deletedError";
 	public static final String PAGE_STORE_PlAN_EDIT = "store_plan_edit";
 	public static final String PAGE_STORE_OPTION_EDIT = "store_option_edit";
 	public static final String PAGE_STORE_READ = "store_read";

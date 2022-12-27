@@ -75,7 +75,7 @@ public class UserListController {
 			// ユーザーフォーム
 			User_listForm user_listForm = new User_listForm();
 			user_listForm.setStore_id(user_plan.getStore_id());
-			user_listForm.setStore_name(user_plan.getPlan().getStore().getName());
+			user_listForm.setStore_name(user_plan.getPlan().getStore().getStore_name());
 			user_listForm.setUser_plan(user_plan);
 			// マップ追加
 			user_listFormMap.put(user_plan.getStore_id(), user_listForm);
@@ -92,7 +92,7 @@ public class UserListController {
 				// 店舗一覧フォーム
 				User_listForm user_listForm = new User_listForm();
 				user_listForm.setStore_id(user_option.getStore_id());
-				user_listForm.setStore_name(user_option.getOption().getStore().getName());
+				user_listForm.setStore_name(user_option.getOption().getStore().getStore_name());
 				user_listForm.getUser_options().add(user_option);
 				// マップ追加
 				user_listFormMap.put(user_option.getStore_id(), user_listForm);

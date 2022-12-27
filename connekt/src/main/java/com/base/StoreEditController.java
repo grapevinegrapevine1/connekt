@@ -125,41 +125,50 @@ public class StoreEditController {
 			// 既存プラン
 			BaseModel _baseModel = isPlan ? planService.find(baseModel.getId()) : optionService.find(baseModel.getId());
 			
-			// プランが存在しない場合
-			if(_baseModel == null) {
+			// プランIDが存在する場合
+			if(0 < baseModel.getId()) {
+				// プラン一覧画面へエラー遷移
+				return Const.REDIRECT_HEADER + Const.PAGE_STORE_PlAN_DELETED;
 				
-				// Stripe商品作成
-				String stripePlan_id = stripeUtil.createPlan(baseModel.getPrice(), baseModel.getPlan_interval(), baseModel.getStore_id());
-				// 商品ID設定
-				baseModel.setStripe_plan_id(stripePlan_id);
+			// 正常である場合場合
+			}else{
 				
-			// プランが存在する場合
-			}else {
+				// プランが存在しない場合
+				if(_baseModel == null) {
+					
+					// Stripe商品作成
+					String stripePlan_id = stripeUtil.createPlan(baseModel.getPrice(), baseModel.getPlan_interval(), baseModel.getStore_id());
+					// 商品ID設定
+					baseModel.setStripe_plan_id(stripePlan_id);
+					
+				// プランが存在する場合
+				}else {
+					
+					// 更新不可項目を上書き
+					baseModel.setPrice(_baseModel.getPrice());
+					baseModel.setCount(_baseModel.getCount());
+					baseModel.setPlan_interval(_baseModel.getPlan_interval());
+					baseModel.setStripe_plan_id(_baseModel.getStripe_plan_id());
+					
+					/* 商品更新
+					String stripeBaseModel_id = stripeUtil.updateBaseModel(_baseModel.getStripe_plan_id(), baseModel.getPrice(), baseModel.getPlan_interval());
+					// 設定
+					baseModel.setStripe_plan_id(stripeBaseModel_id);*/
+				}
 				
-				// 更新不可項目を上書き
-				baseModel.setPrice(_baseModel.getPrice());
-				baseModel.setCount(_baseModel.getCount());
-				baseModel.setPlan_interval(_baseModel.getPlan_interval());
-				baseModel.setStripe_plan_id(_baseModel.getStripe_plan_id());
+				// 保存
+				if(isPlan) planService.save((Plan)baseModel);
+				else optionService.save((Option)baseModel);
 				
-				/* 商品更新
-				String stripeBaseModel_id = stripeUtil.updateBaseModel(_baseModel.getStripe_plan_id(), baseModel.getPrice(), baseModel.getPlan_interval());
-				// 設定
-				baseModel.setStripe_plan_id(stripeBaseModel_id);*/
+				// メッセージ
+				List<String> info_messages = new ArrayList<String>();
+				info_messages.add("保存しました。");
+				
+				// リクエスト
+				req.setAttribute(Const.MSG_INFO, info_messages);
+				// セッション設定
+				ses.setAttribute(REQ_PLAN_ID, baseModel.getId());
 			}
-			
-			// 保存
-			if(isPlan) planService.save((Plan)baseModel);
-			else optionService.save((Option)baseModel);
-			
-			// メッセージ
-			List<String> info_messages = new ArrayList<String>();
-			info_messages.add("保存しました。");
-			
-			// リクエスト
-			req.setAttribute(Const.MSG_INFO, info_messages);
-			// セッション設定
-			ses.setAttribute(REQ_PLAN_ID, baseModel.getId());
 		}
 		
 		// 遷移
@@ -204,7 +213,7 @@ public class StoreEditController {
 			if(isPlan) {
 				
 				// 店舗のプラン契約一覧
-				List<User_plan> user_plans = user_planService.containByStoreId(store.getId());
+				List<User_plan> user_plans = user_planService.containByStoreIdAndPlanId("plan", store.getId(), baseModel.getId());
 				// 全契約を次の更新日で停止
 				for(User_plan user_plan : user_plans) {
 					// プラン削除
@@ -218,7 +227,7 @@ public class StoreEditController {
 			} else {
 				
 				// 店舗のオプション契約一覧
-				List<User_option> user_options = user_optionService.containByStoreId(store.getId());
+				List<User_option> user_options = user_optionService.containByStoreIdAndPlanId("option", store.getId(), baseModel.getId());
 				// 全契約を次の更新日で停止
 				for(User_option user_option : user_options) {
 					// オプション削除
@@ -251,7 +260,7 @@ public class StoreEditController {
 		String endDate = stripeUtil.stopContinueSubscription(user_relation.getStripe_subscription_id());
 		
 		// ニュース登録
-		int news_id = newsUtil.saveNew_removePlan(isPlan, store.getId(), store.getName(), planNm);
+		int news_id = newsUtil.saveNew_removePlan(isPlan, store.getId(), store.getStore_name(), planNm);
 		// ニュースユーザー登録
 		newsUtil.saveNews_user(user_relation.getUser_id(), news_id);
 		

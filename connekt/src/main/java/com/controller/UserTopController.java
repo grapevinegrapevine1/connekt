@@ -11,9 +11,11 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import com.model.News_user;
+import com.model.Store;
 import com.model.User;
 import com.properties.Const;
 import com.service.News_userService;
+import com.service.StoreService;
 import com.stripe.model.PaymentMethodCollection;
 import com.stripe.model.SubscriptionCollection;
 import com.util.CommonUtil;
@@ -23,6 +25,7 @@ import com.util.StripeUtil;
 public class UserTopController {
 
 	@Autowired private StripeUtil stripeUtil;
+	@Autowired private StoreService storeService;
 	@Autowired private News_userService news_userService;
 	
 	@RequestMapping("/user_top")
@@ -59,6 +62,18 @@ public class UserTopController {
 		// ニュース一覧
 		List<News_user> news_users = news_userService.findByUserId(user.getId());
 		req.setAttribute("news_users", news_users);
+		
+		// ログイン時セッション店舗ID
+		Object login_store_id = ses.getAttribute(Const.LOGIN_STORE_ID);
+		// ログイン時セッション店舗IDキー削除
+		ses.removeAttribute(Const.LOGIN_STORE_ID);
+		// リクエスト設定
+		if(login_store_id != null && !login_store_id.toString().equals("")) {
+			// 店舗
+			Store loginStore = storeService.find(Integer.parseInt(login_store_id.toString()));
+			// リクエスト設定
+			req.setAttribute(Const.LOGIN_STORE_ID, login_store_id + "_" + loginStore.getStore_name());
+		}
 		
 		//遷移
 		return Const.PAGE_USER_TOP;

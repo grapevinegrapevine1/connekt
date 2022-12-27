@@ -28,10 +28,6 @@ public class StoreSalesForm {
 	private Date start_date;
 	
 	private Date end_date;
-	// 頁最後の支払情報ID
-	private String last_ch;
-	// 頁最後の返金情報ID
-	private String last_re;
 	
 	private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 	
@@ -79,17 +75,5 @@ public class StoreSalesForm {
 		Instant instant = zoned.toInstant();
 		
 		return Date.from(instant);
-	}
-	public String getLast_ch() {
-		return last_ch;
-	}
-	public void setLast_ch(String last_ch) {
-		this.last_ch = last_ch;
-	}
-	public String getLast_re() {
-		return last_re;
-	}
-	public void setLast_re(String last_re) {
-		this.last_re = last_re;
 	}
 }

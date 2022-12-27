@@ -8,6 +8,7 @@ import javax.persistence.Transient;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.PositiveOrZero;
+import javax.validation.constraints.Size;
 
 import org.hibernate.validator.constraints.Range;
 
@@ -20,8 +21,10 @@ public class Store {
 	private int id;
 	@NotBlank
 	@Email
+	@Size(max=255)
 	private String email;
 	@NotBlank
+	@Size(max=35)
 	private String store_name;
 	@NotBlank
 	private String bank_name;
@@ -36,6 +39,7 @@ public class Store {
 	@PositiveOrZero
 	private Long account_number;
 	@NotBlank
+	@Size(max=255)
 	private String name;
 	private String password;
 	@PositiveOrZero

@@ -8,6 +8,7 @@ import javax.persistence.OneToOne;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;
+import javax.validation.constraints.Size;
 
 import org.hibernate.validator.constraints.Range;
 
@@ -30,13 +31,16 @@ public class BaseModel {
 	private int store_id;
 	// 店舗名
 	@NotBlank
+	@Size(max=100)
 	private String name;
 	// 料金
 	@PositiveOrZero
+	@Range(min=0, max=999999)
 	private int price;
 	// Stripe商品ID
 	private String stripe_plan_id;
 	// 説明
+	@Size(max=255)
 	private String description;
 	// 利用可能数
 	@Range(min=1, max=99)

@@ -35,7 +35,7 @@
 		
 		<div id="guide_msg" th:if="${from_store}">契約の登録/変更を行います。</div>
 		
-		<span class="head_2 bold" th:text="${store.name}"></span>
+		<span class="head_2 bold" th:text="${store.store_name}"></span>
 		<span class="head_2" th:text="'(店舗ID:' + ${store.id} + ')'"></span>
 		
 		<!-- メッセージ -->
@@ -48,7 +48,7 @@
 			<textarea id="contract_text" th:text="${contract_text}"></textarea>
 		</div>
 		
-		<form method="post" th:action="@{/checkout_user_plan}">
+		<form method="post" th:action="@{/checkout_user_plan}" onsubmit="return confSave();">
 			
 			<input type="hidden" th:field="*{user_storeForm.store_id}"/>
 			<input type="hidden" th:field="*{user_storeForm.user_id}"/>
@@ -147,7 +147,7 @@
 				※プランを変更する際に、解除されたプランは利用停止されますが利用期間が残っている場合も返金は行われません。「契約中のプラン詳細」をご確認の上、プランを解除する時期にはご注意ください。
 			</p>
 			<p class="warning_text">
-				※返品について、契約開始から2日以内であるかつ未利用のプランであれば、「詳細」ボタンから返品することができます。返品すると決済手数料3.6%を除いた金額が返金されます。
+				※返品について、契約開始から2日以内であるかつ未利用のプランであれば、「詳細」ボタンから返品することができます。返品すると決済手数料を除いた金額が返金されます。
 			</p>
 		</form>
 		

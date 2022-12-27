@@ -45,7 +45,7 @@ public class UserSalesController{
 		
 		// セッションユーザー情報
 		User user = CommonUtil.getSessionUser(ses);
-		return salesController.disp(model, req, ses, isStore, user.getName(), user.getId());
+		return salesController.disp(model, req, ses, isStore, user.getId());
 	}
 	
 	/**
@@ -60,7 +60,7 @@ public class UserSalesController{
 		
 		// セッションユーザー情報
 		User user = CommonUtil.getSessionUser(ses);
-		return salesController.disp(storeSalesForm, bindingResult, model, req, ses, isStore, user.getName(), user.getId());
+		return salesController.disp(storeSalesForm, bindingResult, model, req, ses, isStore, user.getId());
 	}
 	
 	/**

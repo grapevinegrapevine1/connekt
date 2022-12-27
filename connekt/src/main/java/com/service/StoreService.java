@@ -18,6 +18,12 @@ public class StoreService {
 		CommonSpecification<Store> spec = new CommonSpecification<>();
 		return repository.findOne(spec.equal("id", id).and(spec.equal("is_delete", false))).orElse(null);
 	}
+	
+	public Store findWithDelete(int id) {
+		CommonSpecification<Store> spec = new CommonSpecification<>();
+		return repository.findOne(spec.equal("id", id)).orElse(null);
+	}
+
 
 	public Store containByEmailAndName(String email, String store_name) {
 		CommonSpecification<Store> spec = new CommonSpecification<>();

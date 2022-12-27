@@ -12,6 +12,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import com.model.Store;
 import com.model.User;
@@ -20,12 +21,16 @@ import com.util.CommonUtil;
 
 @Controller
 public class LoginController {
-
+	
 	/**
 	 * ログイン画面表示
 	 */
 	@GetMapping("/login")
-	public String login(Model model, HttpServletRequest req, HttpSession ses) throws Exception {
+	public String login(Model model, HttpServletRequest req, HttpSession ses,
+						@RequestParam(name = "store_id", required = false) String store_id) throws Exception {
+		
+		// 店舗IDが存在する場合はセッション設定
+		if(!CommonUtil.isEmpty(store_id)) ses.setAttribute(Const.LOGIN_STORE_ID, store_id);
 		
 		// ログインフォーム
 		model.addAttribute("user", new User());
@@ -80,8 +85,13 @@ public class LoginController {
 			if(sesStore.getStatus() == Const.USER_STATUS_CERT_START) return Const.REDIRECT_HEADER + "login_cert_error";
 			// 入力エラーである場合はエラー遷移
 			else if( isValid(sesStore.getEmail()) ) return Const.REDIRECT_HEADER + "login_error";
-			// 店舗トップ画面
-			else return Const.REDIRECT_HEADER +  Const.PAGE_STORE_TOP;
+			// 正常である場合
+			else {
+				// ログイン時セッション店舗IDキー削除
+				ses.removeAttribute(Const.LOGIN_STORE_ID);
+				// 店舗トップ画面
+				return Const.REDIRECT_HEADER +  Const.PAGE_STORE_TOP;
+			}
 		
 		// セッションが存在しない場合
 		}else {
