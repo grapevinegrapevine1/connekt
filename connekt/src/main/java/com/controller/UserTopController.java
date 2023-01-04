@@ -63,6 +63,18 @@ public class UserTopController {
 		List<News_user> news_users = news_userService.findByUserId(user.getId());
 		req.setAttribute("news_users", news_users);
 		
+		// ログイン時セッション店舗ID設定
+		setReqLoginStoreId(req, ses);
+		
+		//遷移
+		return Const.PAGE_USER_TOP;
+	}
+	
+	/**
+	 * ログイン時セッション店舗ID設定
+	 */
+	private void setReqLoginStoreId(HttpServletRequest req, HttpSession ses) {
+		
 		// ログイン時セッション店舗ID
 		Object login_store_id = ses.getAttribute(Const.LOGIN_STORE_ID);
 		// ログイン時セッション店舗IDキー削除
@@ -74,8 +86,5 @@ public class UserTopController {
 			// リクエスト設定
 			req.setAttribute(Const.LOGIN_STORE_ID, login_store_id + "_" + loginStore.getStore_name());
 		}
-		
-		//遷移
-		return Const.PAGE_USER_TOP;
 	}
 }

@@ -30,6 +30,10 @@ $(function() {
 	$("input[type='number'][min!='']").on('input', function() {
 		validNumberMin(this, $(this).prop("min"));
 	});
+	
+	// Top画面遷移アイコン生成
+	const topIconUrl = isSessionUser ? "user_top" : isSessionStore ? "store_top" : null;
+	if(topIconUrl) $("#header").append($("<button>",{"id":"top_icon", "onclick":"getForm('"+topIconUrl+"')"}));
 });
 
 // 数値入力欄の最大桁数制御
@@ -91,6 +95,15 @@ function checkPassword(){
 			return false;
 		}else return true;
 	}
+}
+
+// ユーザー店舗画面アクセスパス取得
+function getUserStoreUrl(storeId){
+	return window.location.origin + "/login_with_storeId?store_id=" + storeId;
+}
+// 店舗ユーザー画面アクセスパス取得
+function getStoreUserUrl(userId){
+	return window.location.origin + "/login_with_userId?user_id=" + userId;
 }
 
 // QR生成
@@ -276,12 +289,28 @@ function initQrReader(){
 		let imageData = tmp_ctx.getImageData(0, 0, m, m);
 		let scanResult = jsQR(imageData.data, m, m);
 		if (scanResult) {
-			//QRコードをスキャンした結果を出力
-			qr.value = scanResult.data;
+			const urlData = isUrl(scanResult.data);
+			if(urlData){
+				qr.value = urlData.searchParams.get("store_id");
+			}else{
+				qr.value = scanResult.data;
+			}
 			$("#store_req_fm").submit();
 		}else{
 			setTimeout(Scan, 10);
 		}
+	}
+}
+
+/**
+ URLであるか判定
+ */
+function isUrl(url) {
+	try {
+		const urlData = new URL(url);
+		return urlData;
+	} catch (e) {
+		return false;
 	}
 }
 
@@ -296,9 +325,9 @@ function isSmartPhone() {
 /**
  出力確認
  */
-function confExport(){
-	
-	if(isEmpty($("#_start_date_str").val())){
+function confExport() {
+
+	if (isEmpty($("#_start_date_str").val())) {
 		alert("「請求期間選択」の開始日を入力してください");
 		return false;
 	}else{

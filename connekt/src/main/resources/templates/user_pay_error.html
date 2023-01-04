@@ -44,7 +44,7 @@
 		</p>
 		
 		<form method="post" onsubmit="return confirmReqCheckout();" th:action="@{/checkout_pay_error}">
-			<button type="submit" class="btn" th:text="${is_err} ? '再決済' : '登録'"></button>
+			<button type="submit" class="btn" th:text="${is_err} ? '登録・再決済' : '登録'"></button>
 		</form>
 		
 	</body>

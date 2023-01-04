@@ -25,22 +25,41 @@ public class LoginController {
 	/**
 	 * ログイン画面表示
 	 */
-	@GetMapping("/login")
-	public String login(Model model, HttpServletRequest req, HttpSession ses,
+	@GetMapping("/login_with_storeId")
+	public String loginWithStoreId(Model model, HttpServletRequest req, HttpSession ses,
 						@RequestParam(name = "store_id", required = false) String store_id) throws Exception {
 		
 		// 店舗IDが存在する場合はセッション設定
 		if(!CommonUtil.isEmpty(store_id)) ses.setAttribute(Const.LOGIN_STORE_ID, store_id);
+		// ログイン
+		return login(model, req, ses);
+	}
+	@GetMapping("/login_with_userId")
+	public String loginWithUserId(Model model, HttpServletRequest req, HttpSession ses,
+						@RequestParam(name = "user_id", required = false) String user_id) throws Exception {
+		
+		// ユーザーIDが存在する場合はセッション設定
+		if(!CommonUtil.isEmpty(user_id)) ses.setAttribute(Const.LOGIN_USER_ID, user_id);
+		// ログイン
+		return login(model, req, ses);
+	}
+	@GetMapping("/login")
+	public String login(Model model, HttpServletRequest req, HttpSession ses) throws Exception {
 		
 		// ログインフォーム
 		model.addAttribute("user", new User());
-		// セッション店舗情報削除
-		CommonUtil.removeSessionStore(ses);
-		// セッションユーザー情報削除
-		CommonUtil.removeSessionUser(ses);
 		
-		// 遷移
-		return Const.PAGE_LOGIN;
+		// セッションユーザーチェック
+		String sesUserErrFoward = CommonUtil.isSesUser(ses);
+		// セッション店舗チェック
+		String sesStoreErrFoward = CommonUtil.isSesStore(ses);
+		
+		// セッションユーザーが存在する場合はユーザートップ画面へ遷移
+		if(sesUserErrFoward == null) return Const.REDIRECT_HEADER + Const.PAGE_USER_TOP;
+		// セッションユーザーが存在する場合はユーザー店舗画面へ遷移
+		else if(sesStoreErrFoward == null) return Const.REDIRECT_HEADER +  Const.PAGE_STORE_TOP;
+		// セッションが存在しない場合はログイン画面へ遷移
+		else return Const.PAGE_LOGIN;
 	}
 	
 	/**
@@ -75,8 +94,13 @@ public class LoginController {
 			else if(sesUser.getStatus() == Const.USER_STATUS_CERT_START) return Const.REDIRECT_HEADER + "login_cert_error";
 			// 入力エラーである場合はエラー遷移
 			else if( isValid(sesUser.getEmail()) ) return Const.REDIRECT_HEADER + "login_error";
-			// ユーザートップ画面
-			else return Const.REDIRECT_HEADER + Const.PAGE_USER_TOP;
+			// 正常である場合
+			else {
+				// ログイン時セッション店舗IDキー削除
+				ses.removeAttribute(Const.LOGIN_USER_ID);
+				// ユーザートップ画面
+				return Const.REDIRECT_HEADER + Const.PAGE_USER_TOP;
+			}
 			
 		// 店舗用フォームである場合
 		}else if(sesStore != null){
@@ -90,7 +114,7 @@ public class LoginController {
 				// ログイン時セッション店舗IDキー削除
 				ses.removeAttribute(Const.LOGIN_STORE_ID);
 				// 店舗トップ画面
-				return Const.REDIRECT_HEADER +  Const.PAGE_STORE_TOP;
+				return Const.REDIRECT_HEADER + Const.PAGE_STORE_TOP;
 			}
 		
 		// セッションが存在しない場合

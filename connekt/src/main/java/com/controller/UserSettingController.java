@@ -28,6 +28,7 @@ import com.service.CertUtil;
 import com.service.UserService;
 import com.service.User_optionService;
 import com.service.User_planService;
+import com.stripe.exception.InvalidRequestException;
 import com.util.CommonUtil;
 import com.util.StripeUtil;
 
@@ -194,8 +195,26 @@ public class UserSettingController extends BaseUserController{
 			// 既存ユーザーが存在する場合は削除
 			if(srhUser != null) user_service.delete(srhUser.getId());
 			
+			// 顧客ID
+			String customerId = null;
 			// 顧客作成
-			String customerId = stripeUtil.createCustomer(user.getEmail(),user.getName());
+			try {
+				customerId = stripeUtil.createCustomer(user.getEmail(),user.getName());
+			}catch(InvalidRequestException e) {
+				// 現金決済種別が存在するエラーである場合
+				if(stripeUtil.isDeleteCusWithCach(e)) {
+					// エラーメッセージ
+					List<String> error_messages = new ArrayList<String>();
+					error_messages.add("入力されたメールアドレスは利用することができません。");
+					// リクエスト
+					req.setAttribute(Const.MSG_ERROR, error_messages);
+					// モデル
+					model.addAttribute("is_create", true);
+					// 遷移
+					return Const.PAGE_USER_SETTING;
+				}
+			}
+			
 			user.setStripe_customer_id(customerId);
 			
 		/* カード登録開始 */
@@ -208,7 +227,7 @@ public class UserSettingController extends BaseUserController{
 			// カード登録画面へ遷移
 			return stripeUtil.createCard_user(req, customerId, user.getId());
 			
-		// ユーザーが存在する場合
+		// 正常である場合
 		}else {
 			
 			// 認証前ユーザーである場合
@@ -219,7 +238,7 @@ public class UserSettingController extends BaseUserController{
 				// 遷移
 				return LoginController.dispLogin(model, req, true);
 				
-			// ユーザーが存在しない場合
+			// ユーザーが存在する場合
 			}else {
 				
 				// エラーメッセージ

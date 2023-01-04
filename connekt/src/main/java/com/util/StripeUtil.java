@@ -40,6 +40,7 @@ import com.service.User_option_countService;
 import com.service.User_planService;
 import com.service.User_plan_countService;
 import com.stripe.Stripe;
+import com.stripe.exception.InvalidRequestException;
 import com.stripe.exception.StripeException;
 import com.stripe.model.BalanceTransaction;
 import com.stripe.model.Charge;
@@ -105,6 +106,13 @@ public class StripeUtil {
 		Customer customer = Customer.create(params);
 		// 返却
 		return customer.getId();
+	}
+	
+	/**
+	 * Stripeリクエストエラー内容が「決済種別に現金決済が存在するため、ユーザー情報を削除することができません」であるかをチェック
+	 */
+	public boolean isDeleteCusWithCach(InvalidRequestException e) {
+		return e.getMessage().matches(".*You cannot delete a customer with a cash balance.*");
 	}
 	
 	/**

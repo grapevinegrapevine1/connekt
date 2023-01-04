@@ -29,6 +29,8 @@ public class Const {
 	public static final int MAX_SALES_COUNT = 10;
 	// ログイン時セッション店舗IDキー
 	public static final String LOGIN_STORE_ID = "login_store_id";
+	// ログイン時セッションユーザーIDキー
+	public static final String LOGIN_USER_ID = "login_user_id";
 	
 	public static final int USER_STATUS_DEAULT = 0;
 	public static final int USER_STATUS_SET_CARD = 1;

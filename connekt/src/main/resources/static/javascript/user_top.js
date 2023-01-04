@@ -14,7 +14,7 @@ $(function() {
 	}
 	
 	// QR生成
-	createQr($("#qr_code"), qrtext);
+	createQr($("#qr_code"), getStoreUserUrl(qrtext));
 });
 
 function toggleQr(){

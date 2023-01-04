@@ -33,6 +33,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 	public void configure(WebSecurity web) throws Exception {
 		// 認証を許可するファイルパス
 		web.ignoring().antMatchers("/images/**", "/css/**", "/javascript/**", "/json/**",
+									"/login_with_storeId", "/login_with_userId",
 									"/user_create", "/create_user", "/store_create", "/create_store",
 									"/user_valid_error", "/store_valid_error", "/user_forget", "/user_forget_request", "/store_forget",
 									"/store_forget_request","/"+Const.PAGE_USER_FORGET_SEND, "/"+Const.PAGE_STORE_FORGET_SEND,

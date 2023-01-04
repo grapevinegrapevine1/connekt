@@ -27,6 +27,14 @@
 			<script type="text/javascript" th:src="'..' + @{/javascript/library/jquery-1.12.4.min.js}"></script>
 			<script type="text/javascript" th:src="'..' + @{/javascript/common.js}"></script>
 			
+			<!-- ログインフラグ -->
+			<script type="text/javascript" th:inline="javascript">
+				/* セッションユーザー存在可否 */
+				var isSessionUser = /*[[${session.session_user}]]*/true;
+				/* セッション店舗存在可否 */
+				var isSessionStore = /*[[${session.session_store}]]*/true;
+			</script>
+			
 			<!-- css -->
 			<link rel="stylesheet" type="text/css" media="all" th:href="'..' + @{/css/common.css}" />
 				
@@ -113,7 +121,7 @@
 		<div id="qr_canvas_div" th:fragment="qr_reader_area">
 			<video id="js-video"></video>
 			<canvas id="preview"></canvas>
-			<p id="qr_sp_txt">パソコン以外の端末である場合はこのまま閉じるを押し、QRコード読取を終了して下さい</p>
+			<p id="qr_sp_txt">QRコード読取を終了する場合はこのまま閉じるボタンを押して下さい</p>
 			<p id="qr_loading_txt">QRコードリーダーを起動中です</p>
 		</div>
 		

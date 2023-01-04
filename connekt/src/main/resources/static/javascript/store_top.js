@@ -1,7 +1,20 @@
 $(function() {
+	// ログイン時セッション店舗IDが存在する場合
+	if(!isEmpty(login_user_id)){
+		// 分割
+		const spParam = login_user_id.split("_");
+		// 確認
+		//if(window.confirm("「"+ spParam[1] + "」様の手続きページを表示しますか？")){
+			
+			// ローディング表示
+			dispLoading();
+			// 画面遷移
+			getForm("store_request",{"user_id" : spParam[0]})
+		//}
+	}
 	
 	// QR生成
-	createQr($("#qr_code"), qrtext);
+	createQr($("#qr_code"), getUserStoreUrl(qrtext));
 });
 
 function toggleQr(){

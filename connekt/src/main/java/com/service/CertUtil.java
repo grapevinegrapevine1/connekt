@@ -121,7 +121,7 @@ public class CertUtil {
 			}
 		}
 		
-		// 店舗が存在しない場合
+		// ユーザー/店舗が存在しない場合
 		if(obj == null) {
 
 			// エラーメッセージ
@@ -133,18 +133,18 @@ public class CertUtil {
 			// 遷移
 			return LoginController.dispLogin(model, req, isUser);
 			
-		// ユーザーが存在する場合
+		// ユーザー/店舗が存在する場合
 		}else {
 
-			// 認証前店舗である場合
-			if(status == 0) {
+			// 認証前である場合
+			if(status == Const.USER_STATUS_DEAULT || status == Const.USER_STATUS_CERT_START) {
 				
 				// 認証メール送信
-				resendCertMail(objId, forgetForm.getEmail(), req, false);
+				resendCertMail(objId, forgetForm.getEmail(), req, isUser);
 				// 遷移
 				return LoginController.dispLogin(model, req, isUser);
 			
-			// 認証済店舗である場合
+			// 認証済である場合
 			}else {
 				
 				// エラーメッセージ
