@@ -224,9 +224,17 @@ function submitUrl(url, params, method, withClickOption){
 }
 /* ------------------------------------------------------------------------------------ */
 
+// QRリーダー実行中フラグ
+let runQrReader = false;
+// QRリーダー初回起動フラグ
+let isFirstQr = true;
+// QR停止時処理
+function clsQrReader(){
+	// ブラウザでない場合は、QRリーダー処理終了
+	if(!isBrowser()) runQrReader = false;
+}
 // QRリーダー
 function initQrReader(){
-	
 	// 読み込み中表示
 	let $qr_loading_txt = $("#qr_loading_txt");
 	$qr_loading_txt.show();
@@ -234,18 +242,38 @@ function initQrReader(){
 	let $qr_sp_txt = $("#qr_sp_txt");
 	if(isSmartPhone()) $qr_sp_txt.hide();
 	
+	// ブラウザである & 初回QR起動でない場合
+	if(isBrowser() && !isFirstQr){
+		// 読み込み中非表示 
+		$qr_loading_txt.hide();
+		// スマホ用表示
+		if(isSmartPhone()) $qr_sp_txt.show();
+		// 処理終了
+		return;
+	}
+	// 初回QR起動フラグ更新
+	isFirstQr = false;
+	
+	// QRリーダー実行フラグ
+	runQrReader = true;
+	
+	// 変数
 	var tmp, video, tmp_ctx, qr, prev, prev_ctx, w, h, m, x1, y1;
-	video = document.querySelector('#js-video')
+	
+	// Videoタグ設定
+	video = document.getElementById("js-video");
 	video.setAttribute("autoplay", "");
 	video.setAttribute("muted", "");
 	video.setAttribute("playsinline", "");
-	video.onloadedmetadata = function(e) { video.play(); };
+	video.onloadedmetadata = function() { video.play(); };
+	// Canvasタグ設定
 	prev = document.getElementById("preview");
 	prev_ctx = prev.getContext("2d");
 	tmp = document.createElement('canvas');
 	tmp_ctx = tmp.getContext("2d");
 	// 読み取り後の値設定要素
 	qr = document.getElementById("qr_read_val");
+	
 	//カメラ使用の許可ダイアログが表示される
 	navigator.mediaDevices.getUserMedia(
 		//マイクはオフ, カメラの設定   できれば背面カメラ    できれば640×480
@@ -274,13 +302,13 @@ function initQrReader(){
 		//内部のサイズ
 		prev.setAttribute("width", w);
 		prev.setAttribute("height", h);
-		if (w > h) { m = h * 0.5; } else { m = w * 0.5; }
-		x1 = (w - m) / 2;
-		y1 = (h - m) / 2;
 		prev_ctx.drawImage(video, 0, 0, w, h);
 		prev_ctx.beginPath();
 		prev_ctx.strokeStyle = "rgb(255,0,0)";
 		prev_ctx.lineWidth = 2;
+		if (w > h) { m = h * 0.5; } else { m = w * 0.5; }
+		x1 = (w - m) / 2;
+		y1 = (h - m) / 2;
 		prev_ctx.rect(x1, y1, m, m);
 		prev_ctx.stroke();
 		tmp.setAttribute("width", m);
@@ -296,10 +324,28 @@ function initQrReader(){
 				qr.value = scanResult.data;
 			}
 			$("#store_req_fm").submit();
-		}else{
+		}else if(runQrReader){
 			setTimeout(Scan, 10);
 		}
 	}
+}
+
+/**
+ ブラウザであるかを判定
+ */
+function isBrowser(){
+	let res = false;
+	const agent = window.navigator.userAgent.toLowerCase()
+	if (agent.indexOf("msie") != -1 || agent.indexOf("trident") != -1 ||
+		agent.indexOf("edg") != -1 || agent.indexOf("edge") != -1 ||
+		agent.indexOf("opr") != -1 || agent.indexOf("opera") != -1 ||
+		agent.indexOf("chrome") != -1 ||
+		agent.indexOf("safari") != -1 ||
+		agent.indexOf("firefox") != -1 ||
+		agent.indexOf("opr") != -1 || agent.indexOf("opera") != -1) {
+		res = true;
+	}
+	return res;
 }
 
 /**
