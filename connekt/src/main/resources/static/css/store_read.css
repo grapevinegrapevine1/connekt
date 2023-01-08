@@ -3,3 +3,7 @@
 #updateNonAppUserBtn{
 	background: #293a4c;
 }
+
+#qr_sp_txt{
+	display:none !important;
+}

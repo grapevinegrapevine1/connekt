@@ -224,15 +224,6 @@ function submitUrl(url, params, method, withClickOption){
 }
 /* ------------------------------------------------------------------------------------ */
 
-// QRリーダー実行中フラグ
-let runQrReader = false;
-// QRリーダー初回起動フラグ
-let isFirstQr = true;
-// QR停止時処理
-function clsQrReader(){
-	// ブラウザでない場合は、QRリーダー処理終了
-	if(!isBrowser()) runQrReader = false;
-}
 // QRリーダー
 function initQrReader(){
 	// 読み込み中表示
@@ -242,92 +233,43 @@ function initQrReader(){
 	let $qr_sp_txt = $("#qr_sp_txt");
 	if(isSmartPhone()) $qr_sp_txt.hide();
 	
-	// ブラウザである & 初回QR起動でない場合
-	if(isBrowser() && !isFirstQr){
-		// 読み込み中非表示 
-		$qr_loading_txt.hide();
-		// スマホ用表示
-		if(isSmartPhone()) $qr_sp_txt.show();
-		// 処理終了
-		return;
-	}
-	// 初回QR起動フラグ更新
-	isFirstQr = false;
-	
-	// QRリーダー実行フラグ
-	runQrReader = true;
-	
-	// 変数
-	var tmp, video, tmp_ctx, qr, prev, prev_ctx, w, h, m, x1, y1;
-	
-	// Videoタグ設定
-	video = document.getElementById("js-video");
-	video.setAttribute("autoplay", "");
-	video.setAttribute("muted", "");
-	video.setAttribute("playsinline", "");
-	video.onloadedmetadata = function() { video.play(); };
-	// Canvasタグ設定
-	prev = document.getElementById("preview");
-	prev_ctx = prev.getContext("2d");
-	tmp = document.createElement('canvas');
-	tmp_ctx = tmp.getContext("2d");
+	// Videoタグ
+	let videoElm = document.getElementById('js-video');
+	const args = { video: videoElm , mirror: false};
+	// 設定
+	window.URL.createObjectURL = (stream) => {
+		args.video.srcObject = stream;
+		return stream;
+	};
+	// リーダー
+	const scanner = new Instascan.Scanner(args);
 	// 読み取り後の値設定要素
-	qr = document.getElementById("qr_read_val");
-	
-	//カメラ使用の許可ダイアログが表示される
-	navigator.mediaDevices.getUserMedia(
-		//マイクはオフ, カメラの設定   できれば背面カメラ    できれば640×480
-		{ "audio": false, "video": { "facingMode": "environment", "width": { "ideal": 640 }, "height": { "ideal": 480 } } }
-	).then( //許可された場合
-		function(stream) {
-			//0.2秒後にスキャンする
-			video.srcObject = stream;
+	const qr = document.getElementById("qr_read_val");
+	// スキャンイベント
+	scanner.addListener('scan', function(content) {
+		if(!isEmpty(content)){
+			const urlData = isUrl(content);
+			if(urlData.searchParams.get("store_id")){
+				qr.value = urlData.searchParams.get("store_id");
+			}else{
+				qr.value = urlData.searchParams.get("user_id");
+			}
+			$("#store_req_fm").submit();
+		}
+	});
+	// カメラ起動
+	Instascan.Camera.getCameras().then(function(cameras) {
+		// カメラが存在する場合はカメラ起動
+		if (cameras.length > 0){
+			scanner.start(cameras[0]);
 			// 読み込み中非表示 
 			$qr_loading_txt.hide();
 			// スマホ用表示
 			if(isSmartPhone()) $qr_sp_txt.show();
-			// QRスキャン実行
-			setTimeout(Scan, 500);
-		}
-	).catch( //許可されなかった場合
-		function(err) { qr.innerHTML = qr.innerHTML + err + '\n'; }
-	);
-	function Scan() {
-		//選択された幅高さ
-		w = video.videoWidth;
-		h = video.videoHeight;
-		//画面上の表示サイズ
-		prev.style.width = (w / 2) + "px";
-		prev.style.height = (h / 2) + "px";
-		//内部のサイズ
-		prev.setAttribute("width", w);
-		prev.setAttribute("height", h);
-		prev_ctx.drawImage(video, 0, 0, w, h);
-		prev_ctx.beginPath();
-		prev_ctx.strokeStyle = "rgb(255,0,0)";
-		prev_ctx.lineWidth = 2;
-		if (w > h) { m = h * 0.5; } else { m = w * 0.5; }
-		x1 = (w - m) / 2;
-		y1 = (h - m) / 2;
-		prev_ctx.rect(x1, y1, m, m);
-		prev_ctx.stroke();
-		tmp.setAttribute("width", m);
-		tmp.setAttribute("height", m);
-		tmp_ctx.drawImage(prev, x1, y1, m, m, 0, 0, m, m);
-		let imageData = tmp_ctx.getImageData(0, 0, m, m);
-		let scanResult = jsQR(imageData.data, m, m);
-		if (scanResult) {
-			const urlData = isUrl(scanResult.data);
-			if(urlData){
-				qr.value = urlData.searchParams.get("store_id");
-			}else{
-				qr.value = scanResult.data;
-			}
-			$("#store_req_fm").submit();
-		}else if(runQrReader){
-			setTimeout(Scan, 10);
-		}
-	}
+		}else alert('カメラが見つかりません。');
+	}).catch(function(e) {
+		alert("QRコードリーダー起動時エラー：" + e);
+	});
 }
 
 /**

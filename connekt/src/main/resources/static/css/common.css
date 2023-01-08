@@ -426,9 +426,7 @@ input[type="number"] {
 	
 /* QR */
 #js-video{
-	position:absolute;
-	opacity:0;
-	top:0;
+	height: 245px;
 	left:0;
 	z-index:-1000;
 }
