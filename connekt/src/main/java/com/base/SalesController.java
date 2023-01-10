@@ -1,5 +1,7 @@
 package com.base;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.net.URLEncoder;
 import java.sql.Connection;
@@ -45,6 +47,7 @@ import com.stripe.model.Refund;
 import com.stripe.model.Subscription;
 import com.util.CommonUtil;
 import com.util.ConnectionUtil;
+import com.util.MailUtil;
 import com.util.StripeUtil;
 
 @Controller
@@ -55,6 +58,7 @@ public class SalesController{
 	@Autowired private PlanService planService;
 	@Autowired private OptionService optionService;
 	@Autowired private StripeUtil stripeUtil;
+	@Autowired private MailUtil mailUtil;
 	
 	// コネクション汎用
 	@Autowired private ConnectionUtil connectionUtil;
@@ -277,17 +281,19 @@ public class SalesController{
 						User user = userService.findByStripeCustomerId(refund.getPaymentIntentObject().getCustomer());
 						
 						// 顧客名/店舗名
-						String nm;
+						String nm = "";
 						// 店舗処理である場合は顧客名設定
 						if(isStore) nm = user.getName();
 						// 顧客処理である場合
 						else{
-							// サブスクID
-							int subscriptionId = Integer.parseInt(subscription.getMetadata().get("store_id"));
-							// 店舗
-							Store store = storeService.findWithDelete(subscriptionId);
-							// 店舗名
-							nm = store.getStore_name();
+							if(subscription.getMetadata().get("store_id") != null) {
+								// サブスクID
+								int subscriptionId = Integer.parseInt(subscription.getMetadata().get("store_id"));
+								// 店舗
+								Store store = storeService.findWithDelete(subscriptionId);
+								// 店舗名
+								nm = store.getStore_name();
+							}
 						}
 						
 						// 契約名
@@ -430,7 +436,26 @@ public class SalesController{
 				@SuppressWarnings("resource")
 				TrueTypeCollection collection = new TrueTypeCollection(file);
 				PDFont font = PDType0Font.load(document, collection.getFontByName("MS-Mincho"), true);
-		
+
+				// 店舗ID/ユーザーID
+				int id;
+				// 店舗名/ユーザー名
+				String to;
+				// メールアドレス
+				String email;
+				
+				if(isStore) {
+					Store store = CommonUtil.getSessionStore(ses);
+					id = store.getId();
+					to = store.getStore_name();
+					email = store.getEmail();
+				}else {
+					User user = CommonUtil.getSessionUser(ses);
+					id = user.getId();
+					to = user.getName();
+					email = user.getEmail();
+				}
+				
 				// 文字出力処理
 				try(PDPageContentStream cs = new PDPageContentStream(document, page)){
 					
@@ -439,21 +464,6 @@ public class SalesController{
 					cs.setFont(font, 20);
 					cs.newLineAtOffset(240, 755);
 					cs.showText("Connekt 請求書");
-					
-					// 店舗ID/ユーザーID
-					int id;
-					// 店舗名/ユーザー名
-					String to;
-					
-					if(isStore) {
-						Store store = CommonUtil.getSessionStore(ses);
-						id = store.getId();
-						to = store.getStore_name();
-					}else {
-						User user = CommonUtil.getSessionUser(ses);
-						id = user.getId();
-						to = user.getName();
-					}
 					
 					// コネクション生成
 					try(Connection conn = connectionUtil.connect()){
@@ -543,13 +553,20 @@ public class SalesController{
 							cs.newLineAtOffset(0, -20);
 							cs.setFont(font, 10);
 							cs.showText("※クレジットカード決済時に、一般的に売手側が負担するカード決済利用手数料です");
-		
+							
 							cs.setFont(font, 15);
 							cs.newLineAtOffset(0, -50);
-							cs.showText("銀行振込時の外部振込システム手数料 : \\" + com_connekt_trans);
+							boolean isTrans = com_sum < sum;
+							cs.showText("銀行振込時の振込外部システム手数料 : \\" + (isTrans ? com_connekt_trans : 0));
+							if(!isTrans) {
+								cs.newLineAtOffset(0, -20);
+								cs.setFont(font, 10);
+								cs.showText("※売上が手数料未満のため振込は行われません");
+							}
 							
+							cs.setFont(font, 15);
 							cs.newLineAtOffset(0, -75);
-							cs.showText("請求額(手数料)合計 : \\" + com_sum);
+							cs.showText("請求額(手数料)合計 : \\" + (isTrans ? com_sum : 0));
 						}
 						
 					}catch(Exception e){
@@ -563,6 +580,12 @@ public class SalesController{
 				res.setContentType("application/pdf");
 				// ドキュメントを保存します
 				document.save(res.getOutputStream());
+				
+				// メール添付送信
+				ByteArrayOutputStream out = new ByteArrayOutputStream();
+				document.save(out);
+				ByteArrayInputStream in = new ByteArrayInputStream(out.toByteArray());
+				mailUtil.sendSales(email, in);
 			}
 		}
 	}

@@ -1,8 +1,17 @@
 package com.util;
 
+import java.io.IOException;
+import java.io.InputStream;
+
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
+
+import org.apache.pdfbox.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
 import com.properties.Const;
@@ -14,17 +23,25 @@ public class MailUtil {
 	@Autowired private JavaMailSender javaMailSender;
 	
 	/**
-	 * ユーザー認証メール
+	 * 送信元・送信対象設定
 	 */
-	public void sendUserCertMail(String toEmail, String url) {
-			
-			// メールクラス
-		SimpleMailMessage mailMessage = new SimpleMailMessage();
-		
+	private void setFromTo(SimpleMailMessage mailMessage) {
 		// 送信元
 		mailMessage.setFrom(Const.MAIL_FROM);
 		// 送信対象
 		mailMessage.setTo(Const.TEST_EMAIL);
+	}
+	
+	/**
+	 * ユーザー認証メール
+	 */
+	public void sendUserCertMail(String toEmail, String url) {
+			
+		// メールクラス
+		SimpleMailMessage mailMessage = new SimpleMailMessage();
+		
+		// 送信元・送信対象
+		setFromTo(mailMessage);
 		// 件名
 		mailMessage.setSubject("baken - ユーザー認証");
 		// 本文
@@ -42,10 +59,8 @@ public class MailUtil {
 		// メールクラス
 		SimpleMailMessage mailMessage = new SimpleMailMessage();
 		
-		// 送信元
-		mailMessage.setFrom(Const.MAIL_FROM);
-		// 送信対象
-		mailMessage.setTo(Const.TEST_EMAIL);
+		// 送信元・送信対象
+		setFromTo(mailMessage);
 		// 件名
 		mailMessage.setSubject("baken - パスワード再設定");
 		// 本文
@@ -63,10 +78,8 @@ public class MailUtil {
 			// メールクラス
 		SimpleMailMessage mailMessage = new SimpleMailMessage();
 		
-		// 送信元
-		mailMessage.setFrom(Const.MAIL_FROM);
-		// 送信対象
-		mailMessage.setTo(Const.TEST_EMAIL);
+		// 送信元・送信対象
+		setFromTo(mailMessage);
 		// 件名
 		mailMessage.setSubject("baken - 店舗設定へのアクセス認証キー");
 		// 本文
@@ -86,10 +99,8 @@ public class MailUtil {
 			// メールクラス
 		SimpleMailMessage mailMessage = new SimpleMailMessage();
 		
-		// 送信元
-		mailMessage.setFrom(Const.MAIL_FROM);
-		// 送信対象
-		mailMessage.setTo(Const.TEST_EMAIL);
+		// 送信元・送信対象
+		setFromTo(mailMessage);
 		// 件名
 		mailMessage.setSubject("baken - 契約中の" + nm + "が店舗から削除されました");
 		// 本文
@@ -109,10 +120,8 @@ public class MailUtil {
 			// メールクラス
 		SimpleMailMessage mailMessage = new SimpleMailMessage();
 		
-		// 送信元
-		mailMessage.setFrom(Const.MAIL_FROM);
-		// 送信対象
-		mailMessage.setTo(Const.TEST_EMAIL);
+		// 送信元・送信対象
+		setFromTo(mailMessage);
 		// 件名
 		mailMessage.setSubject("baken - 契約中の店舗「"+storeNm+"」が削除されました");
 		// 本文
@@ -120,5 +129,27 @@ public class MailUtil {
 		
 		// メール送信
 		javaMailSender.send(mailMessage);
+	}
+	
+	/**
+	 * ユーザー認証メール
+	 */
+	public void sendSales(String toEmail, InputStream inputStream) throws MessagingException, IOException {
+		
+		// メールクラス
+		MimeMessage message = javaMailSender.createMimeMessage();
+		MimeMessageHelper helper = new MimeMessageHelper(message, true);
+		// 送信元・送信対象
+		message.setFrom(Const.MAIL_FROM);
+		helper.setTo(Const.TEST_EMAIL);
+		// 件名
+		helper.setSubject("baken - 請求書送付");
+		// 本文
+		helper.setText("請求書を送付します。添付ファイルから請求書(PDF)をダウンロードすることができます。");
+		// 添付
+		helper.addAttachment("invoice.pdf", new ByteArrayResource(IOUtils.toByteArray(inputStream)));
+		
+		// メー送信
+		javaMailSender.send(message);
 	}
 }
